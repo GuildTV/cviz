@@ -11,6 +11,8 @@ public class Command {
 	static byte LOAD = 1;
 	static byte STOP = 2;
 	static byte LOOP = 3;
+	static byte PAUSE = 4;
+	static byte RESUME = 5;
 	
 	private int layer;
 	private byte action;
@@ -49,6 +51,10 @@ public class Command {
 			return STOP;
 		case "LOOP":
 			return LOOP;
+		case "PAUSE":
+			return PAUSE;
+		case "RESUME":
+			return RESUME;
 		}
 		return -1;
 	}
@@ -65,6 +71,12 @@ public class Command {
 		}
 		else if(c.getAction() == Command.STOP) {
 			layer.stop();
+		}
+		else if(c.getAction() == Command.PAUSE) {
+			layer.pause();
+		}
+		else if(c.getAction() == Command.RESUME) {
+			layer.sendCommand("RESUME");
 		}
 		else if(c.getAction() == Command.LOOP) {
 			layer.play();

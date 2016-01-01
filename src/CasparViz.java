@@ -95,12 +95,17 @@ public class CasparViz implements Runnable {
 				latch.reset();
 				System.out.println(" continuing");
 			}
-			if(triggers.isEmpty()) {
-				osc.checkNonLoop();
-				try {
-					latch.await();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+			if(triggers.isEmpty()) {	
+				if(!activeTriggers.isEmpty()) {
+					osc.checkNonLoop();
+					try {
+						latch.await();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				else {
+					System.out.println(activeTriggers.size());
 				}
 				System.out.println("Done, exiting");
 				System.exit(0);
