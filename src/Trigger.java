@@ -42,12 +42,6 @@ public class Trigger {
 		this.layer = layer;
 	}
 	
-	/*public Trigger(byte type, Command c) {
-		commands = new LinkedList<Command>();
-		commands.add(c);
-		loop = true;
-	}*/
-	
 	public void setLoop() {
 		loop = true;
 	}

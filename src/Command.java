@@ -11,7 +11,6 @@ public class Command {
 	static byte LOAD = 1;
 	static byte STOP = 2;
 	static byte LOOP = 3;
-	//static byte LOOPC = 4;
 	
 	private int layer;
 	private byte action;
@@ -56,11 +55,6 @@ public class Command {
 	
 	public static void execute(Command c, ConcurrentHashMap<Integer,String> currentLayer, AmcpChannel channel,
 			CopyOnWriteArrayList<Trigger> activeTriggers) {
-		execute(c, currentLayer, channel, activeTriggers, false);
-	}
-	
-	public static void execute(Command c, ConcurrentHashMap<Integer,String> currentLayer, AmcpChannel channel,
-			CopyOnWriteArrayList<Trigger> activeTriggers, boolean looping) {
 		AmcpLayer layer = new AmcpLayer(channel, c.getLayer());
 		if(c.getAction() == Command.PLAY) {
 			layer.play();
@@ -81,11 +75,6 @@ public class Command {
 			t.addCommand(new Command(c.getLayer(), Command.LOOP, currentLayer.get(layer.layerId())));
 			activeTriggers.add(t);
 		}
-		/*else if(c.getAction() == Command.LOOPC) {
-			layer.play();
-			layer.loadBg(new Video(c.getName()));
-			currentLayer.put(layer.layerId(), c.getName());
-		}*/
 		else {
 			System.err.println("Invalid command");
 		}

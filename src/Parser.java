@@ -31,7 +31,6 @@ public class Parser {
 					matcher = pattern.matcher(line);
 					if(matcher.find()) {
 						qualifier = matcher.group();
-						//System.out.println("qualifier " + qualifier);
 						
 						if(qualifier.equals("END")) {
 							matcher.find();

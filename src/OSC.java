@@ -51,7 +51,6 @@ public class OSC implements Runnable {
 				
 					boolean anyNonLoop = false;
 					for(Trigger t : triggers) {
-						//System.out.println(t);
 						if(!t.isLoop()) {
 							anyNonLoop = true;
 						}
@@ -110,36 +109,35 @@ public class OSC implements Runnable {
 		}
 	}
 	
-//	public static void main(String[] args) {
-//		OSCPortIn receiver = null;
-//		OSCListener listener = null;
-//		try {
-//			receiver = new OSCPortIn(5253);
-//			listener = new OSCListener() {
-//				public void acceptMessage(java.util.Date time, OSCMessage message) {
-//					System.out.print(message.getAddress() + "    ");
-//					for(Object x : message.getArguments()) {
-//						System.out.print(x + " : ");
-//					}
-//					System.out.println();
-//				}
-//			};
-//
-//			// /channel/channum/stage/layer/LAYNUM/FILE/FRAME (current/total)
-//			
-//			receiver.addListener("/channel/1/stage/layer/[0-9]*/file/frame", listener);
-//			receiver.startListening();
-//		} catch (SocketException e) {
-//			e.printStackTrace();
-//		}
-//		while(true) {
-//			try {
-//				Thread.sleep(5);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//		}
-//	}
-//	
+	public static void main(String[] args) {
+		OSCPortIn receiver = null;
+		OSCListener listener = null;
+		try {
+			receiver = new OSCPortIn(5253);
+			listener = new OSCListener() {
+				public void acceptMessage(java.util.Date time, OSCMessage message) {
+					System.out.print(message.getAddress() + "    ");
+					for(Object x : message.getArguments()) {
+						System.out.print(x + " : ");
+					}
+					System.out.println();
+				}
+			};
+
+			// /channel/channum/stage/layer/LAYNUM/FILE/FRAME (current/total)
+			
+			receiver.addListener("/channel/1/stage/layer/[0-9]*/file/frame", listener);
+			receiver.startListening();
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		while(true) {
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }
