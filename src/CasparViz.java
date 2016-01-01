@@ -8,7 +8,7 @@ import se.svt.caspar.amcp.*;
 public class CasparViz implements Runnable {
 	
 	public static void main(String[] args) throws InterruptedException, SocketException {
-		ConcurrentHashMap<Integer,String> currentLayer = new ConcurrentHashMap<Integer,String>();
+		ConcurrentHashMap<Integer,LayerInfo> currentLayer = new ConcurrentHashMap<Integer,LayerInfo>();
 		LinkedList<Trigger> triggers = new LinkedList<Trigger>();
 		CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<Trigger>();
 		ResettableCountDownLatch latch = new ResettableCountDownLatch(1);
@@ -26,14 +26,14 @@ public class CasparViz implements Runnable {
 	int currentCommand = 0;
 	boolean currentCommandTrigger = false;
 	int currentCommandLayer;
-	private ConcurrentHashMap<Integer,String> currentLayer;
+	private ConcurrentHashMap<Integer,LayerInfo> currentLayer;
 	private LinkedList<Trigger> triggers;
 	private CopyOnWriteArrayList<Trigger> activeTriggers;
 	private ResettableCountDownLatch latch;
 	private AmcpChannel channel;
 	private OSC osc;
 	
-	public CasparViz(ConcurrentHashMap<Integer,String> currentLayer, LinkedList<Trigger> triggers,
+	public CasparViz(ConcurrentHashMap<Integer,LayerInfo> currentLayer, LinkedList<Trigger> triggers,
 			CopyOnWriteArrayList<Trigger> activeTriggers, ResettableCountDownLatch latch,
 			AmcpChannel channel, OSC osc) {
 		this.currentLayer = currentLayer;
@@ -49,12 +49,12 @@ public class CasparViz implements Runnable {
 		triggers = Parser.parseTimeline("c:\\caspar\\new.tl");
 		System.out.println(triggers.size() + " triggers processed");
 		Trigger t;
-		
-		try {
+
+		/*try {
 			Thread.sleep(150);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
-		}
+		}*/
 		
 		do {
 			t = triggers.pop();
@@ -70,10 +70,10 @@ public class CasparViz implements Runnable {
 				activeTriggers.add(t);					
 			}
 			else if(t.getType() == Trigger.QUEUED) {
-				// help!
+				// construct cue trigger
 				if(Trigger.outstandingTriggers(activeTriggers)) {
 					osc.checkNonLoop();
-					System.out.print("Awaiting previous trigger completion before cue trigger insert...");
+					//System.out.print("Awaiting previous trigger completion before cue trigger insert...");
 					try {
 						latch.await();
 					} catch (InterruptedException e) {
@@ -81,9 +81,9 @@ public class CasparViz implements Runnable {
 					}
 				}
 				else {
-					System.out.println("No outstanding triggers...");
+					//System.out.println("No outstanding triggers...");
 				}
-				System.out.println(" trigger inserted");
+				//System.out.println(" trigger inserted");
 				latch.reset();
 				activeTriggers.add(t);
 				System.out.println("Awaiting cue on...");
@@ -111,7 +111,6 @@ public class CasparViz implements Runnable {
 				System.exit(0);
 			}
 		} while(true);
-		//System.out.println("done!");
 	}
 
 }

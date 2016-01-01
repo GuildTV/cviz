@@ -59,7 +59,7 @@ public class Command {
 		return -1;
 	}
 	
-	public static void execute(Command c, ConcurrentHashMap<Integer,String> currentLayer, AmcpChannel channel,
+	public static void execute(Command c, ConcurrentHashMap<Integer,LayerInfo> currentLayer, AmcpChannel channel,
 			CopyOnWriteArrayList<Trigger> activeTriggers) {
 		AmcpLayer layer = new AmcpLayer(channel, c.getLayer());
 		if(c.getAction() == Command.PLAY) {
@@ -67,7 +67,7 @@ public class Command {
 		}
 		else if(c.getAction() == Command.LOAD) {
 			layer.loadBg(new Video(c.getName()));
-			currentLayer.put(layer.layerId(), c.getName());
+			currentLayer.put(layer.layerId(), new LayerInfo(c.getName()));
 		}
 		else if(c.getAction() == Command.STOP) {
 			layer.stop();
@@ -80,11 +80,11 @@ public class Command {
 		}
 		else if(c.getAction() == Command.LOOP) {
 			layer.play();
-			layer.loadBg(new Video(currentLayer.get(layer.layerId())));
+			layer.loadBg(new Video(currentLayer.get(layer.layerId()).getName()));
 			currentLayer.put(layer.layerId(), currentLayer.get(layer.layerId()));
 			Trigger t = new Trigger(Trigger.END, c.getLayer());
 			t.setLoop();
-			t.addCommand(new Command(c.getLayer(), Command.LOOP, currentLayer.get(layer.layerId())));
+			t.addCommand(new Command(c.getLayer(), Command.LOOP, currentLayer.get(layer.layerId()).getName()));
 			activeTriggers.add(t);
 		}
 		else {

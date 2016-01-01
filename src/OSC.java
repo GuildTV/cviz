@@ -12,7 +12,7 @@ public class OSC implements Runnable {
 	
 	boolean alreadyEnded = false;
 	
-	private ConcurrentHashMap<Integer,String> currentLayer;
+	private ConcurrentHashMap<Integer,LayerInfo> currentLayer;
 	private CopyOnWriteArrayList<Trigger> triggers;
 	private ResettableCountDownLatch latch;
 	private AmcpChannel channel;
@@ -20,7 +20,7 @@ public class OSC implements Runnable {
 	private boolean cued = false;
 	private boolean checkNonLoop = false;
 	
-	public OSC(ConcurrentHashMap<Integer,String> currentLayer, CopyOnWriteArrayList<Trigger> triggers,
+	public OSC(ConcurrentHashMap<Integer,LayerInfo> currentLayer, CopyOnWriteArrayList<Trigger> triggers,
 			ResettableCountDownLatch latch, AmcpChannel channel) {
 		this.currentLayer = currentLayer;
 		this.triggers = triggers;
@@ -49,8 +49,7 @@ public class OSC implements Runnable {
 				public void acceptMessage(java.util.Date time, OSCMessage message) {
 					if(message.getAddress()
 							.matches("\\/channel\\/1\\/stage\\/layer\\/[0-9]*\\/file\\/frame")) {
-						short layer = Short.parseShort(message.getAddress().split("/")[5]);
-						
+						int layer = Integer.parseInt(message.getAddress().split("/")[5]);
 						boolean anyNonLoop = false;
 						for(Trigger t : triggers) {
 							if(!t.isLoop()) {
@@ -76,7 +75,17 @@ public class OSC implements Runnable {
 									else {
 										targetFrame = t.getTime();
 									}
-									if(t.hasWaited()) {
+									if(currentLayer.get(layer).getLastFrame() == currentFrame &&
+											targetFrame > currentFrame) {
+										// the video didn't play to the end for some reason, move on
+										System.err.println("Loop didn't reach the end, check your video!");
+										Command c;
+										while((c = t.getNextCommand()) != null) {
+											Command.execute(c, currentLayer, channel, triggers);
+										}
+										triggers.remove(t);
+									}
+									else if(t.hasWaited()) {
 										// do it
 										Command c;
 										while((c = t.getNextCommand()) != null) {
@@ -90,6 +99,11 @@ public class OSC implements Runnable {
 								}
 							}
 						}
+						
+						if(currentLayer.containsKey(layer)) {
+							currentLayer.get(layer).setLastFrame(currentFrame);							
+						}
+						
 						if(checkNonLoop) {
 							if(!anyNonLoop) {
 								if(latch.getCount() == 1) {
