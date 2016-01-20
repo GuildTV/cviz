@@ -8,18 +8,24 @@ import se.svt.caspar.amcp.*;
 public class CasparViz implements Runnable {
 	
 	public static void main(String[] args) throws InterruptedException, SocketException {
+		if (args.length < 2){
+			System.out.println("Expected: 127.0.0.1 new.tl");
+			return;
+		}
+
+		System.out.println("Connecting to: " + args[0]);
+
 		ConcurrentHashMap<Integer,LayerInfo> currentLayer = new ConcurrentHashMap<Integer,LayerInfo>();
 		LinkedList<Trigger> triggers = new LinkedList<Trigger>();
 		CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<Trigger>();
 		ResettableCountDownLatch latch = new ResettableCountDownLatch(1);
 		
-		AmcpCasparDevice host = new AmcpCasparDevice("127.0.0.1", 5250);
+		AmcpCasparDevice host = new AmcpCasparDevice(args[0], 5250);
 		AmcpChannel channel = new AmcpChannel(host, 1);
-		
 		
 		OSC osc = new OSC(currentLayer, activeTriggers, latch, channel);
 		(new Thread(osc)).start();
-		(new Thread(new CasparViz(currentLayer, triggers, activeTriggers, latch, channel, osc))).start();
+		(new Thread(new CasparViz(currentLayer, triggers, activeTriggers, latch, channel, osc, args[1]))).start();
 		(new Thread(new CueInterface(osc))).start();
 	}
 	
@@ -32,21 +38,23 @@ public class CasparViz implements Runnable {
 	private ResettableCountDownLatch latch;
 	private AmcpChannel channel;
 	private OSC osc;
+	private String filename;
 	
 	public CasparViz(ConcurrentHashMap<Integer,LayerInfo> currentLayer, LinkedList<Trigger> triggers,
 			CopyOnWriteArrayList<Trigger> activeTriggers, ResettableCountDownLatch latch,
-			AmcpChannel channel, OSC osc) {
+			AmcpChannel channel, OSC osc, String filename) {
 		this.currentLayer = currentLayer;
 		this.triggers = triggers;
 		this.activeTriggers = activeTriggers;
 		this.latch = latch;
 		this.channel = channel;
 		this.osc = osc;
+		this.filename = filename;
 	}
 
 	public void run() {
-		System.out.println("Caspar-timeline v0.1 running");
-		triggers = Parser.parseTimeline("c:\\caspar\\new.tl");
+		System.out.println("Caspar-timeline v0.1 running with timeline: " + filename);
+		triggers = Parser.parseTimeline(filename);
 		System.out.println(triggers.size() + " triggers processed");
 		Trigger t;
 
