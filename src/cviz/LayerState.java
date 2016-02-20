@@ -1,14 +1,19 @@
-public class LayerInfo {
+package cviz;
+
+/**
+ * Track the layer state to deal with stopping on not the last frame
+ */
+public class LayerState {
 
 	private String name;
 	private long lastFrame;
 	
-	public LayerInfo(String name) {
+	public LayerState(String name) {
 		this.name = name;
 		lastFrame = 0;
 	}
 	
-	public LayerInfo(String name, long lastFrame) {
+	public LayerState(String name, long lastFrame) {
 		this.name = name;
 		this.lastFrame = lastFrame;
 	}
@@ -26,6 +31,6 @@ public class LayerInfo {
 	}
 
 	public String toString() {
-		return "LayerInfo: " + name + " " + lastFrame;
+		return "LayerState: " + name + " " + lastFrame;
 	}
 }

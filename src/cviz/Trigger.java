@@ -1,14 +1,11 @@
+package cviz;
+
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Trigger {
-	static byte IMMEDIATE = 0;
-	static byte FRAME = 1;
-	static byte END = 2;
-	static byte QUEUED = 3;
-	
-	private byte type;
+	private TriggerType type;
 	private long time;
 	private int layer;
 	private boolean loop = false;
@@ -17,26 +14,26 @@ public class Trigger {
 	
 	private LinkedList<Command> commands;
 	
-	public Trigger(byte type) {
-		commands = new LinkedList<Command>();
+	public Trigger(TriggerType type) {
+		commands = new LinkedList<>();
 		this.type = type;
-		if(type == Trigger.QUEUED) {
+		if(type == TriggerType.QUEUED) {
 			layer = -1;
 			time = -1;
 		}
 	}
 	
-	public Trigger(byte type, int layer) {
-		commands = new LinkedList<Command>();
+	public Trigger(TriggerType type, int layer) {
+		commands = new LinkedList<>();
 		this.type = type;
 		this.layer = layer;
-		if(type == Trigger.END) {
+		if(type == TriggerType.END) {
 			time = -1;
 		}
 	}
 	
-	public Trigger(byte type, long time, int layer) {
-		commands = new LinkedList<Command>();
+	public Trigger(TriggerType type, long time, int layer) {
+		commands = new LinkedList<>();
 		this.type = type;
 		this.time = time;
 		this.layer = layer;
@@ -68,7 +65,7 @@ public class Trigger {
 		}
 	}
 
-	public byte getType() {
+	public TriggerType getType() {
 		return type;
 	}
 	

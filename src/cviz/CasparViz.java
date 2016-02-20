@@ -1,21 +1,29 @@
+package cviz;
+
 import java.net.SocketException;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import lib.ResettableCountDownLatch;
 import se.svt.caspar.amcp.*;
 
 public class CasparViz implements Runnable {
 	
 	public static void main(String[] args) throws InterruptedException, SocketException {
-		if (args.length < 2){
-			System.out.println("Expected: 127.0.0.1 new.tl");
-			return;
-		}
+//		if (args.length < 2){
+//			System.out.println("Expected: 127.0.0.1 new.tl");
+//			return;
+//		}
+		
+		args = new String[]{
+			"127.0.0.1",
+			"new.tl"
+		};
 
 		System.out.println("Connecting to: " + args[0]);
 
-		ConcurrentHashMap<Integer,LayerInfo> currentLayer = new ConcurrentHashMap<Integer,LayerInfo>();
+		ConcurrentHashMap<Integer, LayerState> currentLayer = new ConcurrentHashMap<Integer, LayerState>();
 		LinkedList<Trigger> triggers = new LinkedList<Trigger>();
 		CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<Trigger>();
 		ResettableCountDownLatch latch = new ResettableCountDownLatch(1);
@@ -32,7 +40,7 @@ public class CasparViz implements Runnable {
 	int currentCommand = 0;
 	boolean currentCommandTrigger = false;
 	int currentCommandLayer;
-	private ConcurrentHashMap<Integer,LayerInfo> currentLayer;
+	private ConcurrentHashMap<Integer, LayerState> currentLayer;
 	private LinkedList<Trigger> triggers;
 	private CopyOnWriteArrayList<Trigger> activeTriggers;
 	private ResettableCountDownLatch latch;
@@ -40,9 +48,9 @@ public class CasparViz implements Runnable {
 	private OSC osc;
 	private String filename;
 	
-	public CasparViz(ConcurrentHashMap<Integer,LayerInfo> currentLayer, LinkedList<Trigger> triggers,
-			CopyOnWriteArrayList<Trigger> activeTriggers, ResettableCountDownLatch latch,
-			AmcpChannel channel, OSC osc, String filename) {
+	public CasparViz(ConcurrentHashMap<Integer, LayerState> currentLayer, LinkedList<Trigger> triggers,
+					 CopyOnWriteArrayList<Trigger> activeTriggers, ResettableCountDownLatch latch,
+					 AmcpChannel channel, OSC osc, String filename) {
 		this.currentLayer = currentLayer;
 		this.triggers = triggers;
 		this.activeTriggers = activeTriggers;
@@ -54,7 +62,7 @@ public class CasparViz implements Runnable {
 
 	public void run() {
 		System.out.println("Caspar-timeline v0.1 running with timeline: " + filename);
-		triggers = Parser.parseTimeline(filename);
+		triggers = Parser.Parse(filename);
 		System.out.println(triggers.size() + " triggers processed");
 		Trigger t;
 
@@ -66,18 +74,18 @@ public class CasparViz implements Runnable {
 		
 		do {
 			t = triggers.pop();
-			if(t.getType() == Trigger.IMMEDIATE) {
+			if(t.getType() == TriggerType.IMMEDIATE) {
 				// do it now!
 				Command c;
 				while((c = t.getNextCommand()) != null) {
 					Command.execute(c, currentLayer, channel, activeTriggers);
 				}
 			}
-			else if(t.getType() == Trigger.END || t.getType() == Trigger.FRAME) {
+			else if(t.getType() == TriggerType.END || t.getType() == TriggerType.FRAME) {
 				// make active trigger
 				activeTriggers.add(t);					
 			}
-			else if(t.getType() == Trigger.QUEUED) {
+			else if(t.getType() == TriggerType.QUEUED) {
 				// construct cue trigger
 				if(Trigger.outstandingTriggers(activeTriggers)) {
 					osc.checkNonLoop();

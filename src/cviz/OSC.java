@@ -1,3 +1,5 @@
+package cviz;
+
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -6,13 +8,14 @@ import com.illposed.osc.OSCListener;
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortIn;
 
+import lib.ResettableCountDownLatch;
 import se.svt.caspar.amcp.AmcpChannel;
 
 public class OSC implements Runnable {
 	
 	boolean alreadyEnded = false;
 	
-	private ConcurrentHashMap<Integer,LayerInfo> currentLayer;
+	private ConcurrentHashMap<Integer, LayerState> currentLayer;
 	private CopyOnWriteArrayList<Trigger> triggers;
 	private ResettableCountDownLatch latch;
 	private AmcpChannel channel;
@@ -20,8 +23,8 @@ public class OSC implements Runnable {
 	private boolean cued = false;
 	private boolean checkNonLoop = false;
 	
-	public OSC(ConcurrentHashMap<Integer,LayerInfo> currentLayer, CopyOnWriteArrayList<Trigger> triggers,
-			ResettableCountDownLatch latch, AmcpChannel channel) {
+	public OSC(ConcurrentHashMap<Integer, LayerState> currentLayer, CopyOnWriteArrayList<Trigger> triggers,
+			   ResettableCountDownLatch latch, AmcpChannel channel) {
 		this.currentLayer = currentLayer;
 		this.triggers = triggers;
 		this.latch = latch;
@@ -55,7 +58,7 @@ public class OSC implements Runnable {
 							if(!t.isLoop()) {
 								anyNonLoop = true;
 							}
-							if(t.getType() == Trigger.QUEUED) {
+							if(t.getType() == TriggerType.QUEUED) {
 								if(cued) {
 									cued = false;
 									Command c;
@@ -66,10 +69,10 @@ public class OSC implements Runnable {
 									latch.countDown();
 								}
 							}
-							else if(t.getType() == Trigger.FRAME || t.getType() == Trigger.END) {
+							else if(t.getType() == TriggerType.FRAME || t.getType() == TriggerType.END) {
 								if(t.getLayer() == layer) {
 									currentFrame = (long) message.getArguments().get(0);
-									if(t.getType() == Trigger.END) {
+									if(t.getType() == TriggerType.END) {
 										targetFrame = (long) message.getArguments().get(1);
 									}
 									else {
@@ -123,7 +126,7 @@ public class OSC implements Runnable {
 					}
 					else { // queued triggers will get stuck if only one layer active (and is paused!)
 						for(Trigger t : triggers) {
-							if(t.getType() == Trigger.QUEUED) {
+							if(t.getType() == TriggerType.QUEUED) {
 								if(cued) {
 									cued = false;
 									Command c;
@@ -144,41 +147,10 @@ public class OSC implements Runnable {
 			//receiver.addListener("/channel/1/stage/layer/[0-9]*/file/frame", listener);
 			receiver.addListener("", listener);
 			receiver.startListening();
-			System.out.println("OSC started");
+			System.out.println("cviz.OSC started");
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
 	}
-	
-//	public static void main(String[] args) {
-//		OSCPortIn receiver = null;
-//		OSCListener listener = null;
-//		try {
-//			receiver = new OSCPortIn(5253);
-//			listener = new OSCListener() {
-//				public void acceptMessage(java.util.Date time, OSCMessage message) {
-//					System.out.print(message.getAddress() + "    ");
-//					for(Object x : message.getArguments()) {
-//						System.out.print(x + " : ");
-//					}
-//					System.out.println();
-//				}
-//			};
-//
-//			// /channel/channum/stage/layer/LAYNUM/FILE/FRAME (current/total)
-//			
-//			receiver.addListener("/channel/1/stage/layer/[0-9]*/file/frame", listener);
-//			receiver.startListening();
-//		} catch (SocketException e) {
-//			e.printStackTrace();
-//		}
-//		while(true) {
-//			try {
-//				Thread.sleep(5);
-//			} catch (InterruptedException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//	}
-	
+
 }
