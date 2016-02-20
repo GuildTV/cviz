@@ -1,4 +1,4 @@
-package cviz;
+package cviz.timeline;
 
 public enum CommandType {
 	UNKNOWN,

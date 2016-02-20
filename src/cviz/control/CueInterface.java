@@ -1,4 +1,6 @@
-package cviz;
+package cviz.control;
+
+import cviz.OSC;
 
 import java.io.BufferedReader;
 import java.io.IOException;

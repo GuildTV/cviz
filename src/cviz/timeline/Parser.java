@@ -1,4 +1,4 @@
-package cviz;
+package cviz.timeline;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

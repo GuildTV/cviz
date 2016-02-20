@@ -1,8 +1,9 @@
-package cviz;
+package cviz.timeline;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import cviz.LayerState;
 import se.svt.caspar.amcp.AmcpChannel;
 import se.svt.caspar.amcp.AmcpLayer;
 import se.svt.caspar.producer.Video;
@@ -58,7 +59,7 @@ public class Command {
 	}
 	
 	public static void execute(Command c, ConcurrentHashMap<Integer, LayerState> currentLayer, AmcpChannel channel,
-							   CopyOnWriteArrayList<Trigger> activeTriggers) {
+                               CopyOnWriteArrayList<Trigger> activeTriggers) {
 		AmcpLayer layer = new AmcpLayer(channel, c.getLayer());
 		if(c.getAction() == CommandType.PLAY) {
 			layer.play();

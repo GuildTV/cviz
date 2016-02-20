@@ -1,4 +1,4 @@
-package cviz;
+package cviz.timeline;
 
 import java.util.LinkedList;
 import java.util.NoSuchElementException;

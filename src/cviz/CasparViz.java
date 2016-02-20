@@ -5,6 +5,11 @@ import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import cviz.control.CueInterface;
+import cviz.timeline.Command;
+import cviz.timeline.Parser;
+import cviz.timeline.Trigger;
+import cviz.timeline.TriggerType;
 import lib.ResettableCountDownLatch;
 import se.svt.caspar.amcp.*;
 
@@ -23,23 +28,20 @@ public class CasparViz implements Runnable {
 
 		System.out.println("Connecting to: " + args[0]);
 
-		ConcurrentHashMap<Integer, LayerState> currentLayer = new ConcurrentHashMap<Integer, LayerState>();
-		LinkedList<Trigger> triggers = new LinkedList<Trigger>();
-		CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<Trigger>();
+		ConcurrentHashMap<Integer, LayerState> currentLayer = new ConcurrentHashMap<>();
+		LinkedList<Trigger> triggers = new LinkedList<>();
+		CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
 		ResettableCountDownLatch latch = new ResettableCountDownLatch(1);
 		
 		AmcpCasparDevice host = new AmcpCasparDevice(args[0], 5250);
 		AmcpChannel channel = new AmcpChannel(host, 1);
 		
-		OSC osc = new OSC(currentLayer, activeTriggers, latch, channel);
+		OSC osc = new OSC(currentLayer, activeTriggers, latch, channel, 5253);
 		(new Thread(osc)).start();
 		(new Thread(new CasparViz(currentLayer, triggers, activeTriggers, latch, channel, osc, args[1]))).start();
 		(new Thread(new CueInterface(osc))).start();
 	}
 	
-	int currentCommand = 0;
-	boolean currentCommandTrigger = false;
-	int currentCommandLayer;
 	private ConcurrentHashMap<Integer, LayerState> currentLayer;
 	private LinkedList<Trigger> triggers;
 	private CopyOnWriteArrayList<Trigger> activeTriggers;
@@ -71,7 +73,7 @@ public class CasparViz implements Runnable {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}*/
-		
+
 		do {
 			t = triggers.pop();
 			if(t.getType() == TriggerType.IMMEDIATE) {
