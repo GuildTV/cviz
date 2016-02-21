@@ -2,74 +2,59 @@ package cviz.timeline;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Trigger {
 	private TriggerType type;
-	private long time;
-	private int layer;
+	private long targetFrame;
+	private int layerId;
 	private boolean loop = false;
 	private boolean waited = false;
 	
-	private LinkedList<Command> commands;
-	
-	public Trigger(TriggerType type) {
-		commands = new LinkedList<>();
+	private LinkedList<Command> commands = new LinkedList<>();
+
+	public static Trigger CreateCue(){
+		return new Trigger(TriggerType.CUE, -1, -1);
+	}
+	public static Trigger CreateImmediate(){
+		return new Trigger(TriggerType.IMMEDIATE, -1, -1);
+	}
+	public static Trigger CreateFrame(int layerId, long targetFrame){
+		return new Trigger(TriggerType.FRAME, layerId, targetFrame);
+	}
+	public static Trigger CreateEnd(int layerId){
+		return new Trigger(TriggerType.END, layerId, -1);
+	}
+	public static Trigger CreateLoop(int layerId, String videoName){
+		Trigger t = new Trigger(TriggerType.END, layerId, -1);
+		t.loop = true;
+		t.addCommand(new Command(layerId, CommandType.LOOP, videoName));
+		return t;
+	}
+
+	private Trigger(TriggerType type, int layerId, long targetFrame) {
 		this.type = type;
-		if(type == TriggerType.QUEUED) {
-			layer = -1;
-			time = -1;
-		}
+		this.targetFrame = targetFrame;
+		this.layerId = layerId;
 	}
 	
-	public Trigger(TriggerType type, int layer) {
-		commands = new LinkedList<>();
-		this.type = type;
-		this.layer = layer;
-		if(type == TriggerType.END) {
-			time = -1;
-		}
-	}
-	
-	public Trigger(TriggerType type, long time, int layer) {
-		commands = new LinkedList<>();
-		this.type = type;
-		this.time = time;
-		this.layer = layer;
-	}
-	
-	public void setLoop() {
-		loop = true;
-	}
-	
-	public void addCommand(Command c) {
+	protected void addCommand(Command c) {
 		commands.add(c);
 	}
 
     public List<Command> getCommands(){
         return commands;
     }
-	
-	public Command getNextCommand() {
-		try {
-			return commands.pop();
-		}
-		catch(NoSuchElementException e) {
-			return null;
-		}
-	}
 
 	public TriggerType getType() {
 		return type;
 	}
 	
-	public long getTime() {
-		return time;
+	public long getTargetFrame() {
+		return targetFrame;
 	}
 	
-	public int getLayer() {
-		return layer;
+	public int getLayerId() {
+		return layerId;
 	}
 	
 	public void setWaited() {
@@ -85,16 +70,6 @@ public class Trigger {
 	}
 
 	public String toString() {
-		return "Trigger: " + type + " " + time + " " + layer + " loop: " + loop;
-	}
-
-	public static boolean outstandingTriggers(CopyOnWriteArrayList<Trigger> activeTriggers) {
-		boolean anyNotLoop = false;
-		for(Trigger t : activeTriggers) {
-			if(!t.isLoop()) {
-				anyNotLoop = true;
-			}
-		}
-		return anyNotLoop;
+		return "Trigger: " + type + " " + targetFrame + " " + layerId + " loop: " + loop;
 	}
 }

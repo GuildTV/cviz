@@ -2,16 +2,11 @@ package cviz;
 
 import java.net.SocketException;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import cviz.control.CueInterface;
-import cviz.timeline.Command;
+import cviz.control.ConsoleControlInterface;
+import cviz.control.IControlInterface;
 import cviz.timeline.Parser;
 import cviz.timeline.Trigger;
-import cviz.timeline.TriggerType;
-import lib.ResettableCountDownLatch;
-import se.svt.caspar.amcp.*;
 
 public class CasparViz {
 
@@ -31,13 +26,18 @@ public class CasparViz {
         System.out.println("Caspar-timeline v0.1 running with timeline: " + args[1]);
         LinkedList<Trigger> triggers = Parser.Parse(args[1]);
 
-		AmcpCasparDevice host = new AmcpCasparDevice(args[0], 5250);
-		AmcpChannel channel = new AmcpChannel(host, 1);
+		ProcessorManager manager = new ProcessorManager();
+
+		IControlInterface controlInterface = new ConsoleControlInterface(manager);
+		manager.bindInterface(controlInterface);
+
+		new Thread(controlInterface).start();
+/*
 
         Processor processor = new Processor(channel, triggers);
 
 		(new Thread(new OSC(processor, 5253))).start();
 		(new Thread(processor)).start();
-		(new Thread(new CueInterface(processor))).start();
+		(new Thread(new ConsoleControlInterface(processor))).start();*/
 	}
 }

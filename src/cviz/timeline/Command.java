@@ -5,18 +5,18 @@ package cviz.timeline;
  * Performs the action when called by OSC
  */
 public class Command {
-	private int layer;
+	private int layerId;
 	private CommandType action;
 	private String name;
 	
-	public Command(int layer, CommandType action, String name) {
-		this.layer = layer;
+	protected Command(int layerId, CommandType action, String name) {
+		this.layerId = layerId;
 		this.action = action;
 		this.name = name;
 	}
-	
-	public Command(int layer, CommandType action) {
-		this.layer = layer;
+
+	protected Command(int layerId, CommandType action) {
+		this.layerId = layerId;
 		this.action = action;
 	}
 	
@@ -24,15 +24,15 @@ public class Command {
 		return name;
 	}
 	
-	public int getLayer() {
-		return layer;
+	public int getLayerId() {
+		return layerId;
 	}
 	
 	public CommandType getAction() {
 		return action;
 	}
-	
-	public static CommandType parseCommandType(String s) {
+
+	protected static CommandType parseCommandType(String s) {
 		switch(s) {
 		case "PLAY":
 			return CommandType.PLAY;
@@ -51,6 +51,6 @@ public class Command {
 	}
 
     public String toString() {
-        return "COMMAND: " + getLayer() + " " + getAction() + " " + getName();
+        return "COMMAND: " + getLayerId() + " " + getAction() + " " + getName();
     }
 }

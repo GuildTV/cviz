@@ -67,18 +67,18 @@ public class Parser {
 
             if(qualifier.equals("END")) {
                 matcher.find();
-                currentTrigger = new Trigger(TriggerType.END, Short.parseShort(matcher.group()));
+                currentTrigger = Trigger.CreateEnd(Short.parseShort(matcher.group()));
             }
             else if(qualifier.equals("Q")) {
-                currentTrigger = new Trigger(TriggerType.QUEUED);
+                currentTrigger = Trigger.CreateCue();
             }
             else {
                 matcher.find();
-                currentTrigger = new Trigger(TriggerType.FRAME, Long.parseLong(qualifier), Short.parseShort(matcher.group()));
+                currentTrigger = Trigger.CreateFrame(Short.parseShort(matcher.group()), Long.parseLong(qualifier));
             }
         }
         else {
-            currentTrigger = new Trigger(TriggerType.IMMEDIATE);
+            currentTrigger = Trigger.CreateImmediate();
         }
     }
 

@@ -1,19 +1,21 @@
 package cviz;
 
 import java.net.SocketException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortIn;
 
 public class OSC implements Runnable {
-
-    private IProcessor processor; //TODO - list of processors for different channels
-
+    private ProcessorManager manager;
     private int oscPort;
 
-	public OSC(IProcessor processor, int oscPort) {
+	private Pattern pattern = Pattern.compile("/channel/([0-9]+)/stage/layer/([0-9]+)/file/frame");
+
+	public OSC(ProcessorManager manager, int oscPort) {
         this.oscPort = oscPort;
-        this.processor = processor;
+        this.manager = manager;
 	}
 	
 	public void run() {
@@ -33,18 +35,16 @@ public class OSC implements Runnable {
 
 	private class OSCListener implements com.illposed.osc.OSCListener {
 		public void acceptMessage(java.util.Date time, OSCMessage message) {
-            if(message.getAddress()
-                    .matches("/channel/[0-9]+/stage/layer/[0-9]+/file/frame")) {
-                int channelNumber = Integer.parseInt(message.getAddress().split("/")[2]);
-                int layer = Integer.parseInt(message.getAddress().split("/")[5]);
+			Matcher matcher = pattern.matcher(message.getAddress());
 
-                if(processor.getChannelNumber() != channelNumber)
-                    return;
+			if(matcher.find()) {
+				int channelNumber = Integer.parseInt(matcher.group(1));
+				int layer = Integer.parseInt(matcher.group(2));
 
-                long frame = (long) message.getArguments().get(0);
+				long frame = (long) message.getArguments().get(0);
                 long totalFrames = (long) message.getArguments().get(1);
 
-                processor.receiveVideoFrame(layer, frame, totalFrames);
+                manager.receiveVideoFrame(channelNumber, layer, frame, totalFrames);
             }
         }
 	}

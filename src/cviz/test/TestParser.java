@@ -13,10 +13,10 @@ public class TestParser {
         Iterator<Trigger> i = commands.iterator();
         while(i.hasNext()) {
             Trigger t = i.next();
-            System.out.println("TRIGGER: " + t.getType() + " " + t.getTime() + " " + t.getLayer());
-            Command c;
-            while((c = t.getNextCommand()) != null) {
-                System.out.println("\tCOMMAND: " + c.getLayer() + " " + c.getAction() + " " + c.getName());
+            System.out.println("TRIGGER: " + t.getType() + " " + t.getTargetFrame() + " " + t.getLayerId());
+
+            for (Command c: t.getCommands()){
+                System.out.println("\tCOMMAND: " + c.getLayerId() + " " + c.getAction() + " " + c.getName());
             }
         }
     }

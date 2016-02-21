@@ -4,33 +4,27 @@ package cviz;
  * Track the layer state to deal with stopping on not the last frame
  */
 public class LayerState {
+	private String videoName;
+	private long previousFrame;
+	
+	public LayerState(String videoName) {
+		this.videoName = videoName;
+		previousFrame = 0;
+	}
 
-	private String name;
-	private long lastFrame;
-	
-	public LayerState(String name) {
-		this.name = name;
-		lastFrame = 0;
+	public String getVideoName() {
+		return videoName;
 	}
 	
-	public LayerState(String name, long lastFrame) {
-		this.name = name;
-		this.lastFrame = lastFrame;
+	public long getPreviousFrame() {
+		return previousFrame;
 	}
 	
-	public String getName() {
-		return name;
-	}
-	
-	public long getLastFrame() {
-		return lastFrame;
-	}
-	
-	public void setLastFrame(long lastFrame) {
-		this.lastFrame = lastFrame; 
+	public void setPreviousFrame(long lastFrame) {
+		this.previousFrame = lastFrame;
 	}
 
 	public String toString() {
-		return "LayerState: " + name + " " + lastFrame;
+		return "LayerState: " + videoName + " " + previousFrame;
 	}
 }
