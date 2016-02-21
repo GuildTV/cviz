@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class Timeline implements ITimeline {
+public class Timeline implements ITimeline, Runnable {
     private final AmcpChannel channel;
     private final LinkedList<Trigger> triggers;
     private final CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
@@ -50,12 +50,10 @@ public class Timeline implements ITimeline {
         return layer;
     }
 
-    @Override
     public void stop(){
         System.out.println("Timeline received stop");
         running = false;
     }
-    @Override
     public void kill(){
         System.out.println("Timeline received kill");
         killNow = false;
@@ -77,7 +75,6 @@ public class Timeline implements ITimeline {
         return activeTriggers;
     }
 
-    @Override
     public boolean isRunning(){
         return running;
     }
@@ -189,12 +186,6 @@ public class Timeline implements ITimeline {
         return moved > 0;
     }
 
-    @Override
-    public int getChannelNumber(){
-        return channel.channelId();
-    }
-
-    @Override
     public synchronized void triggerCue(){
         if(!running){
             System.err.println("Received cue when not running");
@@ -221,7 +212,6 @@ public class Timeline implements ITimeline {
         }
     }
 
-    @Override
     public synchronized void triggerOnVideoFrame(int layer, long frame, long totalFrames){
         if(!running) return;
 
@@ -276,7 +266,6 @@ public class Timeline implements ITimeline {
         return templateData.get(fieldName);
     }
 
-    @Override
     public void setTemplateData(HashMap<String, String> templateData) {
         this.templateData = templateData != null ? templateData : new HashMap<>();
     }

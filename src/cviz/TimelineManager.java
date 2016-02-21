@@ -21,7 +21,7 @@ public class TimelineManager {
 
     private IControlInterface controlInterface;
 
-    private ITimeline timeline;
+    private Timeline timeline;
 
     public TimelineManager(){
         OSC oscWrapper = new OSC(this, oscPort);
