@@ -1,6 +1,6 @@
 package cviz.control;
 
-import cviz.ProcessorManager;
+import cviz.TimelineManager;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,9 +8,9 @@ import java.io.InputStreamReader;
 
 public class ConsoleControlInterface implements IControlInterface {
 
-	private ProcessorManager manager;
+	private TimelineManager manager;
 	
-	public ConsoleControlInterface(ProcessorManager manager) {
+	public ConsoleControlInterface(TimelineManager manager) {
 		this.manager = manager;
 	}
 
@@ -33,7 +33,7 @@ public class ConsoleControlInterface implements IControlInterface {
 					manager.startTimeline();
 					timelineLoaded = false;
 				} else if(waitingForCue) {
-					manager.receivedCue();
+					manager.triggerCue();
 				} else {
 					System.out.println("Unknown command");
 				}

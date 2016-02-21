@@ -1,6 +1,6 @@
 package cviz.timeline.commands;
 
-import cviz.IProcessor;
+import cviz.ITimeline;
 import se.svt.caspar.amcp.AmcpLayer;
 
 public class PlayCommand extends ICommand {
@@ -9,8 +9,8 @@ public class PlayCommand extends ICommand {
     }
 
     @Override
-    public boolean execute(IProcessor processor) {
-        AmcpLayer layer = processor.getLayer(getLayerId());
+    public boolean execute(ITimeline timeline) {
+        AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
             layer.play();

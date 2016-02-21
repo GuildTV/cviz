@@ -1,6 +1,6 @@
 package cviz.timeline.commands;
 
-import cviz.IProcessor;
+import cviz.ITimeline;
 import cviz.LayerState;
 import cviz.timeline.Trigger;
 import se.svt.caspar.amcp.AmcpLayer;
@@ -12,19 +12,19 @@ public class LoopCommand extends ICommand {
     }
 
     @Override
-    public boolean execute(IProcessor processor) {
-        AmcpLayer layer = processor.getLayer(getLayerId());
+    public boolean execute(ITimeline timeline) {
+        AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
             layer.play();
-            LayerState state = processor.getLayerState(getLayerId());
+            LayerState state = timeline.getLayerState(getLayerId());
             if(state == null)
                 throw new Exception("Missing layer state for loop " + getLayerId());
 
             layer.loadBg(new Video(state.getVideoName()));
 
             Trigger t = Trigger.CreateLoop(getLayerId(), state.getVideoName());
-            processor.getActiveTriggers().add(t);
+            timeline.getActiveTriggers().add(t);
 
             System.out.println("Looping: " + state.toString());
 

@@ -1,6 +1,6 @@
 package cviz.timeline.commands;
 
-import cviz.IProcessor;
+import cviz.ITimeline;
 import cviz.LayerState;
 import se.svt.caspar.amcp.AmcpLayer;
 import se.svt.caspar.producer.Video;
@@ -14,12 +14,12 @@ public class LoadCommand extends ICommand {
     }
 
     @Override
-    public boolean execute(IProcessor processor) {
-        AmcpLayer layer = processor.getLayer(getLayerId());
+    public boolean execute(ITimeline timeline) {
+        AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
             layer.loadBg(new Video(filename));
-            processor.setLayerState(getLayerId(), new LayerState(filename));
+            timeline.setLayerState(getLayerId(), new LayerState(filename));
             return true;
         } catch (Exception e){
             System.err.println("Failed to execute command: " + e.getMessage());

@@ -1,6 +1,6 @@
 package cviz.timeline.commands;
 
-import cviz.IProcessor;
+import cviz.ITimeline;
 import se.svt.caspar.amcp.AmcpLayer;
 
 public class CgAddCommand extends ICommand {
@@ -14,11 +14,11 @@ public class CgAddCommand extends ICommand {
     }
 
     @Override
-    public boolean execute(IProcessor processor) {
-        AmcpLayer layer = processor.getLayer(getLayerId());
+    public boolean execute(ITimeline timeline) {
+        AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
-            String templateData = processor.getTemplateData(templateField);
+            String templateData = timeline.getTemplateData(templateField);
             layer.sendCommand("CG", "ADD 1 " + templateName + " 0 " + templateData);
 
             return true;

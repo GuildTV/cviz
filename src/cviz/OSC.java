@@ -8,12 +8,12 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortIn;
 
 public class OSC implements Runnable {
-    private ProcessorManager manager;
+    private TimelineManager manager;
     private int oscPort;
 
 	private Pattern pattern = Pattern.compile("/channel/([0-9]+)/stage/layer/([0-9]+)/file/frame");
 
-	public OSC(ProcessorManager manager, int oscPort) {
+	public OSC(TimelineManager manager, int oscPort) {
         this.oscPort = oscPort;
         this.manager = manager;
 	}
@@ -44,7 +44,7 @@ public class OSC implements Runnable {
 				long frame = (long) message.getArguments().get(0);
                 long totalFrames = (long) message.getArguments().get(1);
 
-                manager.receiveVideoFrame(channelNumber, layer, frame, totalFrames);
+                manager.triggerOnVideoFrame(channelNumber, layer, frame, totalFrames);
             }
         }
 	}

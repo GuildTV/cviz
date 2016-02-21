@@ -1,6 +1,6 @@
 package cviz.timeline.commands;
 
-import cviz.IProcessor;
+import cviz.ITimeline;
 
 public abstract class ICommand {
     private final int layerId;
@@ -13,7 +13,7 @@ public abstract class ICommand {
         return layerId;
     }
 
-    public abstract boolean execute(IProcessor processor);
+    public abstract boolean execute(ITimeline timeline);
 
     public abstract String toString();
 }

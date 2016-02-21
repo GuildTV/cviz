@@ -10,7 +10,7 @@ public class CasparViz {
 	public static void main(String[] args) throws InterruptedException, SocketException {
         System.out.println("Caspar-viz v0.1 running");
 
-		ProcessorManager manager = new ProcessorManager();
+		TimelineManager manager = new TimelineManager();
 
 		IControlInterface controlInterface = new ConsoleControlInterface(manager);
 		manager.bindInterface(controlInterface);

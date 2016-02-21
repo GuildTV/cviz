@@ -9,19 +9,19 @@ import se.svt.caspar.amcp.AmcpChannel;
 import java.io.File;
 import java.util.LinkedList;
 
-public class ProcessorManager {
+public class TimelineManager {
     private static final int oscPort = 5253; // TODO - make this dynamic
     private static final int amcpChannel = 1; // TODO - make dynamic
 
     private static final String timelinePath = "./";
     private static final String timelineExt = ".tl";
 
-    private IProcessor processor;
+    private ITimeline timeline;
 
     private IControlInterface controlInterface;
     private AmcpCasparDevice host;
 
-    public ProcessorManager(){
+    public TimelineManager(){
         OSC oscWrapper = new OSC(this, oscPort);
         new Thread(oscWrapper).start();
 
@@ -35,11 +35,11 @@ public class ProcessorManager {
     }
 
     public boolean loadTimeline(String name){
-        if(processor != null && processor.isRunning()) {
+        if(timeline != null && timeline.isRunning()) {
             System.err.println("Cannot load timeline when one is already running");
             return false;
         }
-        processor = null;
+        timeline = null;
 
         File file = new File(timelinePath + name + timelineExt);
         if(!file.exists() || !file.isFile()){
@@ -54,7 +54,7 @@ public class ProcessorManager {
         }
 
         AmcpChannel channel = new AmcpChannel(host, amcpChannel);
-        processor = new Processor(channel, controlInterface, timeline);
+        this.timeline = new Timeline(channel, controlInterface, timeline);
 
         System.out.println("Timeline ready");
         controlInterface.setTimelineLoaded();
@@ -63,35 +63,35 @@ public class ProcessorManager {
     }
 
     public boolean startTimeline(){
-        if(processor == null)
+        if(timeline == null)
             return false;
 
-        if(processor.isRunning())
+        if(timeline.isRunning())
             return false;
 
-        new Thread(processor).start();
+        new Thread(timeline).start();
         return true;
     }
 
     public void killTimeline(){
-        if(processor != null)
-            processor.kill();
+        if(timeline != null)
+            timeline.kill();
     }
 
-    public void receivedCue(){
-        if(processor == null)
+    public void triggerCue(){
+        if(timeline == null)
             return;
 
-        processor.receivedCue();
+        timeline.triggerCue();
     }
 
-    public void receiveVideoFrame(int channel, int layer, long frame, long totalFrames){
+    public void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames){
         if(channel != amcpChannel)
             return;
 
-        if(processor == null)
+        if(timeline == null)
             return;
 
-        processor.receiveVideoFrame(layer, frame, totalFrames);
+        timeline.triggerOnVideoFrame(layer, frame, totalFrames);
     }
 }

@@ -1,6 +1,6 @@
 package cviz.timeline.commands;
 
-import cviz.IProcessor;
+import cviz.ITimeline;
 import cviz.timeline.Trigger;
 import se.svt.caspar.amcp.AmcpLayer;
 
@@ -13,16 +13,16 @@ public class StopCommand extends ICommand {
     }
 
     @Override
-    public boolean execute(IProcessor processor) {
-        AmcpLayer layer = processor.getLayer(getLayerId());
+    public boolean execute(ITimeline timeline) {
+        AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
             layer.stop();
 
-            List<Trigger> oldTriggers = processor.getActiveTriggers().stream()
+            List<Trigger> oldTriggers = timeline.getActiveTriggers().stream()
                     .filter(t -> t.isLoop() && t.getLayerId() == getLayerId())
                     .collect(Collectors.toList());
-            processor.getActiveTriggers().removeAll(oldTriggers);
+            timeline.getActiveTriggers().removeAll(oldTriggers);
             return true;
         } catch (Exception e){
             System.err.println("Failed to execute command: " + e.getMessage());

@@ -11,13 +11,14 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class Processor implements IProcessor {
+public class Timeline implements ITimeline {
     private AmcpChannel channel;
     private LinkedList<Trigger> triggers;
     private CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
     private ConcurrentHashMap<Integer, LayerState> currentLayerState = new ConcurrentHashMap<>();
 
     private IControlInterface controlInterface;
+    private TimelineState state;
 
     private ArrayList<Integer> usedLayers = new ArrayList<>();
 
@@ -26,7 +27,7 @@ public class Processor implements IProcessor {
     private boolean running = false;
     private boolean killNow = false;
 
-    public Processor(AmcpChannel channel, IControlInterface controlInterface,  LinkedList<Trigger> triggers){
+    public Timeline(AmcpChannel channel, IControlInterface controlInterface, LinkedList<Trigger> triggers){
         this.channel = channel;
         this.controlInterface = controlInterface;
         this.triggers = triggers;
@@ -46,12 +47,12 @@ public class Processor implements IProcessor {
 
     @Override
     public void stop(){
-        System.out.println("Processor received stop");
+        System.out.println("Timeline received stop");
         running = false;
     }
     @Override
     public void kill(){
-        System.out.println("Processor received kill");
+        System.out.println("Timeline received kill");
         killNow = false;
         running = false;
     }
@@ -98,7 +99,7 @@ public class Processor implements IProcessor {
         promoteTriggersToActive();
 
         // run any immediate triggers
-        receiveVideoFrame(-1, 0, 100);
+        triggerOnVideoFrame(-1, 0, 100);
 
         while(running){
             synchronized(this) {
@@ -160,7 +161,7 @@ public class Processor implements IProcessor {
     }
 
     @Override
-    public synchronized void receivedCue(){
+    public synchronized void triggerCue(){
         if(!running){
             System.err.println("Received cue when not running");
             return;
@@ -185,7 +186,7 @@ public class Processor implements IProcessor {
     }
 
     @Override
-    public synchronized void receiveVideoFrame(int layer, long frame, long totalFrames){
+    public synchronized void triggerOnVideoFrame(int layer, long frame, long totalFrames){
         if(!running) return;
 
         for(Trigger t: activeTriggers){
