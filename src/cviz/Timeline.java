@@ -56,7 +56,7 @@ public class Timeline implements ITimeline, Runnable {
     }
     public void kill(){
         System.out.println("Timeline received kill");
-        killNow = false;
+        killNow = true;
         running = false;
     }
 
@@ -123,6 +123,8 @@ public class Timeline implements ITimeline, Runnable {
             }
         }
 
+        System.out.println("Template spans " + usedLayers.size() + " layers");
+
         // set some triggers as active
         promoteTriggersToActive();
 
@@ -154,7 +156,7 @@ public class Timeline implements ITimeline, Runnable {
             triggers.clear();
             activeTriggers.clear();
 
-            clearAllChannels();
+            clearAllUserLayers();
         }
 
         System.out.println("Finished running timeline");
@@ -162,10 +164,11 @@ public class Timeline implements ITimeline, Runnable {
         changeState(TimelineState.CLEAR);
     }
 
-    private void clearAllChannels(){
+    private void clearAllUserLayers(){
         for(Integer l: usedLayers){
             AmcpLayer layer = new AmcpLayer(channel, l);
             layer.clear();
+            System.out.println("Clearing layer "  + l);
         }
     }
 

@@ -14,11 +14,13 @@ public class ClientAction implements Serializable {
 
     private ActionType type;
     private String filename;
+    private String templateDataId;
     private HashMap<String, String> templateData;
 
-    public ClientAction(ActionType type, String filename, HashMap<String, String> templateData){
+    public ClientAction(ActionType type, String filename, String templateDataId, HashMap<String, String> templateData){
         this.type = type;
         this.filename = filename;
+        this.templateDataId = templateDataId;
         this.templateData = templateData;
     }
 
@@ -30,11 +32,15 @@ public class ClientAction implements Serializable {
         return filename;
     }
 
+    public String getTemplateDataId(){
+        return templateDataId;
+    }
+
     public HashMap<String, String> getTemplateData(){
         return templateData;
     }
 
     public String toString(){
-        return "Action: " + type + " " + filename + " data: " + (templateData != null?templateData.size():"-");
+        return "Action: " + type + " " + filename + " data: " + templateDataId + " " + (templateData != null?templateData.size():"-");
     }
 }

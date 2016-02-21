@@ -11,6 +11,8 @@ public class TCPControlState implements Serializable {
     private final transient TimelineManager manager;
 
     private TimelineState state;
+    private String templateName;
+    private String dataId;
 
     public TCPControlState(TimelineManager manager){
         this.manager = manager;
@@ -27,6 +29,9 @@ public class TCPControlState implements Serializable {
     }
 
     public void runAction(ClientAction action){
+        templateName = action.getFilename() != null ? action.getFilename() : "";
+        dataId = action.getTemplateDataId() != null ? action.getTemplateDataId() : "";
+
         switch(action.getType()){
             case KILL:
                 manager.killTimeline();
@@ -45,6 +50,10 @@ public class TCPControlState implements Serializable {
                 System.err.println("Unknown action type: "+action.getType());
                 break;
         }
+    }
+
+    public String toString(){
+        return state + " " + templateName + " " + dataId;
     }
 
 }
