@@ -1,6 +1,7 @@
 package cviz.timeline;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -10,7 +11,6 @@ public class Trigger {
 	private int layer;
 	private boolean loop = false;
 	private boolean waited = false;
-	private boolean cued = false;
 	
 	private LinkedList<Command> commands;
 	
@@ -46,6 +46,10 @@ public class Trigger {
 	public void addCommand(Command c) {
 		commands.add(c);
 	}
+
+    public List<Command> getCommands(){
+        return commands;
+    }
 	
 	public Command getNextCommand() {
 		try {
@@ -53,15 +57,6 @@ public class Trigger {
 		}
 		catch(NoSuchElementException e) {
 			return null;
-		}
-	}
-	
-	public Command getNextCommand(boolean peek) {
-		if(peek) {
-			return commands.peek();
-		}
-		else {
-			return getNextCommand();
 		}
 	}
 
@@ -88,15 +83,7 @@ public class Trigger {
 	public boolean isLoop() {
 		return loop;
 	}
-	
-	public boolean beenCued() {
-		return cued;
-	}
-	
-	public void cue() {
-		cued = true;
-	}
-	
+
 	public String toString() {
 		return "Trigger: " + type + " " + time + " " + layer + " loop: " + loop;
 	}

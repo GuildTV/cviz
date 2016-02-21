@@ -1,5 +1,6 @@
 package cviz.control;
 
+import cviz.IProcessor;
 import cviz.OSC;
 
 import java.io.BufferedReader;
@@ -8,10 +9,10 @@ import java.io.InputStreamReader;
 
 public class CueInterface implements Runnable {
 
-	private OSC osc;
+	private IProcessor processor;
 	
-	public CueInterface(OSC osc) {
-		this.osc = osc;
+	public CueInterface(IProcessor processor) {
+		this.processor = processor;
 	}
 	
 	public void run() {
@@ -20,7 +21,7 @@ public class CueInterface implements Runnable {
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 				String s = br.readLine();
 				if(s.equalsIgnoreCase("GO")) {
-					osc.cue();
+					processor.receivedCue();
 				}			
 			} catch(IOException e) {
 				e.printStackTrace();
