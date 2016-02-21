@@ -1,5 +1,8 @@
 package cviz.timeline;
 
+import cviz.timeline.commands.ICommand;
+import cviz.timeline.commands.LoopCommand;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,7 +13,7 @@ public class Trigger {
 	private boolean loop = false;
 	private boolean waited = false;
 	
-	private LinkedList<Command> commands = new LinkedList<>();
+	private LinkedList<ICommand> commands = new LinkedList<>();
 
 	public static Trigger CreateCue(){
 		return new Trigger(TriggerType.CUE, -1, -1);
@@ -27,7 +30,7 @@ public class Trigger {
 	public static Trigger CreateLoop(int layerId, String videoName){
 		Trigger t = new Trigger(TriggerType.END, layerId, -1);
 		t.loop = true;
-		t.addCommand(new Command(layerId, CommandType.LOOP, videoName));
+		t.addCommand(new LoopCommand(layerId));
 		return t;
 	}
 
@@ -37,11 +40,11 @@ public class Trigger {
 		this.layerId = layerId;
 	}
 	
-	protected void addCommand(Command c) {
+	protected void addCommand(ICommand c) {
 		commands.add(c);
 	}
 
-    public List<Command> getCommands(){
+    public List<ICommand> getCommands(){
         return commands;
     }
 
@@ -70,6 +73,6 @@ public class Trigger {
 	}
 
 	public String toString() {
-		return "Trigger: " + type + " " + targetFrame + " " + layerId + " loop: " + loop;
+		return "Trigger: " + type + " " + layerId + " " + targetFrame + " loop: " + loop;
 	}
 }

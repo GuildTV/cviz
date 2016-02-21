@@ -3,7 +3,6 @@ package cviz.test;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import cviz.timeline.Command;
 import cviz.timeline.Parser;
 import cviz.timeline.Trigger;
 
@@ -15,9 +14,7 @@ public class TestParser {
             Trigger t = i.next();
             System.out.println("TRIGGER: " + t.getType() + " " + t.getTargetFrame() + " " + t.getLayerId());
 
-            for (Command c: t.getCommands()){
-                System.out.println("\tCOMMAND: " + c.getLayerId() + " " + c.getAction() + " " + c.getName());
-            }
+            t.getCommands().forEach(System.out::println);
         }
     }
 }

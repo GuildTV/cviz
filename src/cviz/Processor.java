@@ -1,20 +1,15 @@
 package cviz;
 
 import cviz.control.IControlInterface;
-import cviz.timeline.Command;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
+import cviz.timeline.commands.ICommand;
 import se.svt.caspar.amcp.AmcpChannel;
 import se.svt.caspar.amcp.AmcpLayer;
-import se.svt.caspar.producer.Video;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 public class Processor implements IProcessor {
     private AmcpChannel channel;
@@ -26,6 +21,8 @@ public class Processor implements IProcessor {
 
     private ArrayList<Integer> usedLayers = new ArrayList<>();
 
+    private HashMap<Integer, AmcpLayer> layerCache = new HashMap<>();
+
     private boolean running = false;
     private boolean killNow = false;
 
@@ -33,6 +30,18 @@ public class Processor implements IProcessor {
         this.channel = channel;
         this.controlInterface = controlInterface;
         this.triggers = triggers;
+    }
+
+    @Override
+    public AmcpLayer getLayer(int layerId) {
+        AmcpLayer layer = layerCache.get(layerId);
+
+        if(layer == null){
+            layer = new AmcpLayer(channel, layerId);
+            layerCache.put(layerId, layer);
+        }
+
+        return layer;
     }
 
     @Override
@@ -45,6 +54,21 @@ public class Processor implements IProcessor {
         System.out.println("Processor received kill");
         killNow = false;
         running = false;
+    }
+
+    @Override
+    public void setLayerState(int layerId, LayerState state) {
+        currentLayerState.put(layerId, state);
+    }
+
+    @Override
+    public LayerState getLayerState(int layerId) {
+        return currentLayerState.get(layerId);
+    }
+
+    @Override
+    public CopyOnWriteArrayList<Trigger> getActiveTriggers() {
+        return activeTriggers;
     }
 
     @Override
@@ -65,7 +89,7 @@ public class Processor implements IProcessor {
 
         // collect the list of channels being altered
         for(Trigger t: triggers){
-            for(Command c: t.getCommands()){
+            for(ICommand c: t.getCommands()){
                 usedLayers.add(c.getLayerId());
             }
         }
@@ -181,13 +205,10 @@ public class Processor implements IProcessor {
 
             LayerState state = currentLayerState.get(layer);
             if(state == null){
-                System.out.println("Tried to get state and failed");
-                state = new LayerState("Something");
-                currentLayerState.put(layer, state);
+                System.err.println("Tried to get state and failed");
             }
-
             // TODO - this check needs to ensure that an appropriate amount of time has passed
-            if(state.getPreviousFrame() == frame && targetFrame > frame) {
+            else if(state.getPreviousFrame() == frame && targetFrame > frame) {
                 // the video didn't play to the end for some reason, move on
                 System.err.println("Loop didn't reach the end, check your video!");
 
@@ -208,82 +229,14 @@ public class Processor implements IProcessor {
     }
 
     private void executeTrigger(Trigger trigger){
-        trigger.getCommands().forEach(this::executeCommand);
+        // TODO - may want to look into using a thread to do the sending/commands, as they block until they get a response
+        // may cause issues with integrity of triggers lists though
+        trigger.getCommands().forEach(c -> c.execute(this));
         activeTriggers.remove(trigger);
     }
 
-    private String getTemplateData(String fieldName){
+    public String getTemplateData(String fieldName){
         //TODO
         return fieldName;
     }
-
-    // TODO - may want to look into using a thread to do the sending/commands, as they block until they get a response
-    public void executeCommand(Command c) {
-        AmcpLayer layer = new AmcpLayer(channel, c.getLayerId());
-
-        switch(c.getAction()){
-            case PLAY:
-                layer.play();
-                break;
-
-            case LOAD:
-                layer.loadBg(new Video(c.getName()));
-                currentLayerState.put(layer.layerId(), new LayerState(c.getName()));
-                break;
-
-            case STOP:
-                layer.stop();
-                List<Trigger> oldTriggers = activeTriggers.stream()
-                    .filter(t -> t.isLoop() && t.getLayerId() == c.getLayerId())
-                    .collect(Collectors.toList());
-                activeTriggers.removeAll(oldTriggers);
-                break;
-
-            case PAUSE:
-                layer.pause();
-                break;
-
-            case RESUME:
-                layer.sendCommand("RESUME");
-                break;
-
-            case CLEAR:
-                layer.clear();
-                break;
-
-            case CGADD:
-                String templateData = getTemplateData(c.getTemplateField());
-                layer.sendCommand("CG", "ADD 1 " + c.getName() + " 0 " + templateData);
-                break;
-
-            case CGNEXT:
-                layer.sendCommand("CG", "NEXT 1");
-                break;
-
-            case CGPLAY:
-                layer.sendCommand("CG", "PLAY 1");
-                break;
-
-            case CGREMOVE:
-                layer.sendCommand("CG", "REMOVE 1");
-                break;
-
-            case CGSTOP:
-                layer.sendCommand("CG", "STOP 1");
-                break;
-
-            case LOOP:
-                layer.play();
-                LayerState state = currentLayerState.get(layer.layerId());
-                layer.loadBg(new Video(state.getVideoName()));
-                Trigger t = Trigger.CreateLoop(c.getLayerId(), state.getVideoName());
-                activeTriggers.add(t);
-                System.out.println("Looping: " + state.toString() + " ");
-                break;
-
-            default:
-                System.err.println("Invalid command");
-        }
-    }
-
 }

@@ -1,5 +1,7 @@
 package cviz.timeline;
 
+import cviz.timeline.commands.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -29,10 +31,13 @@ public class Parser {
             }
         } catch (IOException e){
             commands = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            commands = null;
         }
     }
 
-    private void ParseLine(String line){
+    private void ParseLine(String line) throws Exception {
         if(line.startsWith("@")) {
             // trigger line
             ParseTrigger(line);
@@ -46,17 +51,7 @@ public class Parser {
         }
         else {
             String[] parts = line.trim().split(" ");
-            short layer = Short.parseShort(parts[0]);
-            CommandType action = parseCommandType(parts[1]);
-            if(parts.length >= 4) {
-                currentTrigger.addCommand(new Command(layer, action, parts[2], parts[3]));
-            }
-            else if(parts.length == 3) {
-                currentTrigger.addCommand(new Command(layer, action, parts[2]));
-            }
-            else if(parts.length == 2) {
-                currentTrigger.addCommand(new Command(layer, action));
-            }
+            currentTrigger.addCommand(parseCommands(parts));
         }
     }
 
@@ -119,36 +114,36 @@ public class Parser {
         return parser.commands;
     }
 
+    private static ICommand parseCommands(String[] parts) throws Exception {
+        short layerId = Short.parseShort(parts[0]);
 
-    private static CommandType parseCommandType(String s) {
-        switch(s) {
+        switch(parts[1]) {
             case "PLAY":
-                return CommandType.PLAY;
+                return new PlayCommand(layerId);
             case "LOAD":
-                return CommandType.LOAD;
+                return new LoadCommand(layerId, parts[2]);
             case "STOP":
-                return CommandType.STOP;
+                return new StopCommand(layerId);
             case "LOOP":
-                return CommandType.LOOP;
+                return new LoopCommand(layerId);
             case "PAUSE":
-                return CommandType.PAUSE;
+                return new PauseCommand(layerId);
             case "RESUME":
-                return CommandType.RESUME;
+                return new ResumeCommand(layerId);
             case "CLEAR":
-                return CommandType.CLEAR;
+                return new ClearCommand(layerId);
             case "CGADD":
-                return CommandType.CGADD;
+                return new CgAddCommand(layerId, parts[2], parts[3]);
             case "CGNEXT":
-                return CommandType.CGNEXT;
+                return new CgNextCommand(layerId);
             case "CGPLAY":
-                return CommandType.CGPLAY;
+                return new CgPlayCommand(layerId);
             case "CGREMOVE":
-                return CommandType.CGREMOVE;
+                return new CgRemoveCommand(layerId);
             case "CGSTOP":
-                return CommandType.CGSTOP;
+                return new CgStopCommand(layerId);
         }
-        System.err.println("Bad command type " + s);
-        return CommandType.UNKNOWN;
+        System.err.println("Bad command type " + parts[1]);
+        throw new Exception("Unknown command type");
     }
-
 }
