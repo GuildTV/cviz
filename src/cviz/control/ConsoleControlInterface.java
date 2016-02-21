@@ -51,13 +51,6 @@ public class ConsoleControlInterface implements IControlInterface {
 	}
 
 	@Override
-	public void receivedBadTimeline(String reason) {
-		waitingForTimeline = true;
-
-		System.err.println("\nBad timeline: "+reason+"\n");
-	}
-
-	@Override
 	public void setTimelineLoaded() {
 		timelineLoaded = true;
 		System.out.println("Loaded timeline: ");

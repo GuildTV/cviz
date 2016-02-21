@@ -17,13 +17,12 @@ public class ProcessorManager {
     private static final String timelineExt = ".tl";
 
     private IProcessor processor;
-    private OSC oscWrapper;
 
     private IControlInterface controlInterface;
     private AmcpCasparDevice host;
 
     public ProcessorManager(){
-        oscWrapper = new OSC(this, oscPort);
+        OSC oscWrapper = new OSC(this, oscPort);
         new Thread(oscWrapper).start();
 
         host = new AmcpCasparDevice("127.0.0.1", 5250); // TODO - make dynamic
