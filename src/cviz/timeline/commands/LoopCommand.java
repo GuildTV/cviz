@@ -23,7 +23,7 @@ public class LoopCommand extends ICommand {
 
             layer.loadBg(new Video(state.getVideoName()));
 
-            Trigger t = Trigger.CreateLoop(getLayerId(), state.getVideoName());
+            Trigger t = Trigger.CreateLoop(getLayerId());
             timeline.getActiveTriggers().add(t);
 
             System.out.println("Looping: " + state.toString());

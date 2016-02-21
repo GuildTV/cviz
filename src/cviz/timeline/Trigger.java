@@ -7,37 +7,37 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Trigger {
-	private TriggerType type;
-	private long targetFrame;
-	private int layerId;
-	private boolean loop = false;
+	private final TriggerType type;
+	private final long targetFrame;
+	private final int layerId;
+	private final boolean loop;
 	private boolean waited = false;
 	
-	private LinkedList<ICommand> commands = new LinkedList<>();
+	private final LinkedList<ICommand> commands = new LinkedList<>();
 
 	public static Trigger CreateCue(){
-		return new Trigger(TriggerType.CUE, -1, -1);
+		return new Trigger(TriggerType.CUE, -1, -1, false);
 	}
 	public static Trigger CreateImmediate(){
-		return new Trigger(TriggerType.IMMEDIATE, -1, -1);
+		return new Trigger(TriggerType.IMMEDIATE, -1, -1, false);
 	}
 	public static Trigger CreateFrame(int layerId, long targetFrame){
-		return new Trigger(TriggerType.FRAME, layerId, targetFrame);
+		return new Trigger(TriggerType.FRAME, layerId, targetFrame, false);
 	}
 	public static Trigger CreateEnd(int layerId){
-		return new Trigger(TriggerType.END, layerId, -1);
+		return new Trigger(TriggerType.END, layerId, -1, false);
 	}
-	public static Trigger CreateLoop(int layerId, String videoName){
-		Trigger t = new Trigger(TriggerType.END, layerId, -1);
-		t.loop = true;
+	public static Trigger CreateLoop(int layerId){
+		Trigger t = new Trigger(TriggerType.END, layerId, -1, true);
 		t.addCommand(new LoopCommand(layerId));
 		return t;
 	}
 
-	private Trigger(TriggerType type, int layerId, long targetFrame) {
+	private Trigger(TriggerType type, int layerId, long targetFrame, boolean loop) {
 		this.type = type;
 		this.targetFrame = targetFrame;
 		this.layerId = layerId;
+		this.loop = loop;
 	}
 	
 	protected void addCommand(ICommand c) {

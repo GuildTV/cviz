@@ -16,10 +16,11 @@ public class TimelineManager {
     private static final String timelinePath = "./";
     private static final String timelineExt = ".tl";
 
-    private ITimeline timeline;
+    private final AmcpCasparDevice host;
 
     private IControlInterface controlInterface;
-    private AmcpCasparDevice host;
+
+    private ITimeline timeline;
 
     public TimelineManager(){
         OSC oscWrapper = new OSC(this, oscPort);
@@ -31,7 +32,7 @@ public class TimelineManager {
     public void bindInterface(IControlInterface newInterface){
         controlInterface = newInterface;
 
-        controlInterface.setWaitingForTimeline();
+        controlInterface.notifyState(TimelineState.CLEAR);
     }
 
     public boolean loadTimeline(String name){
@@ -57,7 +58,6 @@ public class TimelineManager {
         this.timeline = new Timeline(channel, controlInterface, timeline);
 
         System.out.println("Timeline ready");
-        controlInterface.setTimelineLoaded();
 
         return true;
     }

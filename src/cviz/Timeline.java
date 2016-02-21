@@ -12,17 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Timeline implements ITimeline {
-    private AmcpChannel channel;
-    private LinkedList<Trigger> triggers;
-    private CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
-    private ConcurrentHashMap<Integer, LayerState> currentLayerState = new ConcurrentHashMap<>();
+    private final AmcpChannel channel;
+    private final LinkedList<Trigger> triggers;
+    private final CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<Integer, LayerState> currentLayerState = new ConcurrentHashMap<>();
+    private final ArrayList<Integer> usedLayers = new ArrayList<>();
+    private final HashMap<Integer, AmcpLayer> layerCache = new HashMap<>();
 
-    private IControlInterface controlInterface;
-    private TimelineState state;
-
-    private ArrayList<Integer> usedLayers = new ArrayList<>();
-
-    private HashMap<Integer, AmcpLayer> layerCache = new HashMap<>();
+    private final IControlInterface controlInterface;
 
     private boolean running = false;
     private boolean killNow = false;
@@ -31,6 +28,12 @@ public class Timeline implements ITimeline {
         this.channel = channel;
         this.controlInterface = controlInterface;
         this.triggers = triggers;
+
+        changeState(TimelineState.READY);
+    }
+
+    private void changeState(TimelineState newState){
+        controlInterface.notifyState(newState);
     }
 
     @Override
@@ -86,6 +89,8 @@ public class Timeline implements ITimeline {
         if(running) return;
         running = true;
 
+        changeState(TimelineState.RUN);
+
         System.out.println("Starting timeline");
 
         // collect the list of channels being altered
@@ -108,7 +113,9 @@ public class Timeline implements ITimeline {
             }
 
             if(isWaitingForCue())
-                controlInterface.setWaitingForCue();
+                changeState(TimelineState.CUE);
+            else
+                changeState(TimelineState.RUN);
 
             // wait until the timeline has been finished
             try {
@@ -120,6 +127,7 @@ public class Timeline implements ITimeline {
 
         // if kill command has been sent, then stop everything
         if(killNow){
+            changeState(TimelineState.ERROR);
             triggers.clear();
             activeTriggers.clear();
 
@@ -128,7 +136,7 @@ public class Timeline implements ITimeline {
 
         System.out.println("Finished running timeline");
         running = false;
-        controlInterface.setWaitingForTimeline();
+        changeState(TimelineState.CLEAR);
     }
 
     private void clearAllChannels(){

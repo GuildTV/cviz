@@ -4,7 +4,7 @@ package cviz;
  * Track the layer state to deal with stopping on not the last frame
  */
 public class LayerState {
-	private String videoName;
+	private final String videoName;
 	private long previousFrame;
 	
 	public LayerState(String videoName) {

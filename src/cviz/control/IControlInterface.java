@@ -1,8 +1,7 @@
 package cviz.control;
 
-public interface IControlInterface extends Runnable {
-    void setWaitingForCue();
+import cviz.TimelineState;
 
-    void setWaitingForTimeline();
-    void setTimelineLoaded();
+public interface IControlInterface extends Runnable {
+    void notifyState(TimelineState state);
 }
