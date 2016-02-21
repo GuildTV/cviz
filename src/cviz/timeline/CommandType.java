@@ -7,5 +7,12 @@ public enum CommandType {
     STOP,
     LOOP,
     PAUSE,
-    RESUME
+    RESUME,
+    CLEAR,
+
+    CGADD,
+    CGREMOVE,
+    CGPLAY,
+    CGSTOP,
+    CGNEXT
 }

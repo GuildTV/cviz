@@ -8,7 +8,15 @@ public class Command {
 	private int layerId;
 	private CommandType action;
 	private String name;
-	
+	private String templateField;
+
+	protected Command(int layerId, CommandType action, String name, String templateField) {
+		this.layerId = layerId;
+		this.action = action;
+		this.name = name;
+		this.templateField = templateField;
+	}
+
 	protected Command(int layerId, CommandType action, String name) {
 		this.layerId = layerId;
 		this.action = action;
@@ -23,6 +31,8 @@ public class Command {
 	public String getName() {
 		return name;
 	}
+
+	public String getTemplateField(){ return templateField; }
 	
 	public int getLayerId() {
 		return layerId;
@@ -30,24 +40,6 @@ public class Command {
 	
 	public CommandType getAction() {
 		return action;
-	}
-
-	protected static CommandType parseCommandType(String s) {
-		switch(s) {
-		case "PLAY":
-			return CommandType.PLAY;
-		case "LOAD":
-			return CommandType.LOAD;
-		case "STOP":
-			return CommandType.STOP;
-		case "LOOP":
-			return CommandType.LOOP;
-		case "PAUSE":
-			return CommandType.PAUSE;
-		case "RESUME":
-			return CommandType.RESUME;
-		}
-		return CommandType.UNKNOWN;
 	}
 
     public String toString() {

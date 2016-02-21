@@ -47,8 +47,11 @@ public class Parser {
         else {
             String[] parts = line.trim().split(" ");
             short layer = Short.parseShort(parts[0]);
-            CommandType action = Command.parseCommandType(parts[1]);
-            if(parts.length == 3) {
+            CommandType action = parseCommandType(parts[1]);
+            if(parts.length >= 4) {
+                currentTrigger.addCommand(new Command(layer, action, parts[2], parts[3]));
+            }
+            else if(parts.length == 3) {
                 currentTrigger.addCommand(new Command(layer, action, parts[2]));
             }
             else if(parts.length == 2) {
@@ -56,6 +59,7 @@ public class Parser {
             }
         }
     }
+
 
     private void ParseTrigger(String line){
         Matcher matcher;
@@ -113,6 +117,38 @@ public class Parser {
         Parser parser = new Parser(reader);
         parser.Parse();
         return parser.commands;
+    }
+
+
+    private static CommandType parseCommandType(String s) {
+        switch(s) {
+            case "PLAY":
+                return CommandType.PLAY;
+            case "LOAD":
+                return CommandType.LOAD;
+            case "STOP":
+                return CommandType.STOP;
+            case "LOOP":
+                return CommandType.LOOP;
+            case "PAUSE":
+                return CommandType.PAUSE;
+            case "RESUME":
+                return CommandType.RESUME;
+            case "CLEAR":
+                return CommandType.CLEAR;
+            case "CGADD":
+                return CommandType.CGADD;
+            case "CGNEXT":
+                return CommandType.CGNEXT;
+            case "CGPLAY":
+                return CommandType.CGPLAY;
+            case "CGREMOVE":
+                return CommandType.CGREMOVE;
+            case "CGSTOP":
+                return CommandType.CGSTOP;
+        }
+        System.err.println("Bad command type " + s);
+        return CommandType.UNKNOWN;
     }
 
 }

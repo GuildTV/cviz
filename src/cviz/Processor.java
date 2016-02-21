@@ -116,7 +116,7 @@ public class Processor implements IProcessor {
     private boolean promoteTriggersToActive(){
         int moved = 0;
 
-        do{
+        while (!triggers.isEmpty()) {
             Trigger t = triggers.pop();
             moved++;
 
@@ -125,8 +125,7 @@ public class Processor implements IProcessor {
             // we only want to add up until a manual trigger
             if(t.getType() == TriggerType.CUE)
                 break;
-
-        } while(!triggers.isEmpty());
+        }
 
         return moved > 0;
     }
@@ -213,6 +212,11 @@ public class Processor implements IProcessor {
         activeTriggers.remove(trigger);
     }
 
+    private String getTemplateData(String fieldName){
+        //TODO
+        return fieldName;
+    }
+
     // TODO - may want to look into using a thread to do the sending/commands, as they block until they get a response
     public void executeCommand(Command c) {
         AmcpLayer layer = new AmcpLayer(channel, c.getLayerId());
@@ -241,6 +245,31 @@ public class Processor implements IProcessor {
 
             case RESUME:
                 layer.sendCommand("RESUME");
+                break;
+
+            case CLEAR:
+                layer.clear();
+                break;
+
+            case CGADD:
+                String templateData = getTemplateData(c.getTemplateField());
+                layer.sendCommand("CG", "ADD 1 " + c.getName() + " 0 " + templateData);
+                break;
+
+            case CGNEXT:
+                layer.sendCommand("CG", "NEXT 1");
+                break;
+
+            case CGPLAY:
+                layer.sendCommand("CG", "PLAY 1");
+                break;
+
+            case CGREMOVE:
+                layer.sendCommand("CG", "REMOVE 1");
+                break;
+
+            case CGSTOP:
+                layer.sendCommand("CG", "STOP 1");
                 break;
 
             case LOOP:
