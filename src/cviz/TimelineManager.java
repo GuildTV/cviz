@@ -7,6 +7,7 @@ import se.svt.caspar.amcp.AmcpCasparDevice;
 import se.svt.caspar.amcp.AmcpChannel;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 public class TimelineManager {
@@ -35,7 +36,7 @@ public class TimelineManager {
         controlInterface.notifyState(TimelineState.CLEAR);
     }
 
-    public boolean loadTimeline(String name){
+    public synchronized boolean loadTimeline(String name){
         if(timeline != null && timeline.isRunning()) {
             System.err.println("Cannot load timeline when one is already running");
             return false;
@@ -62,30 +63,32 @@ public class TimelineManager {
         return true;
     }
 
-    public boolean startTimeline(){
+    public synchronized boolean startTimeline(HashMap<String, String> templateData){
         if(timeline == null)
             return false;
 
         if(timeline.isRunning())
             return false;
 
+        timeline.setTemplateData(templateData);
+
         new Thread(timeline).start();
         return true;
     }
 
-    public void killTimeline(){
+    public synchronized void killTimeline(){
         if(timeline != null)
             timeline.kill();
     }
 
-    public void triggerCue(){
+    public synchronized void triggerCue(){
         if(timeline == null)
             return;
 
         timeline.triggerCue();
     }
 
-    public void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames){
+    public synchronized void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames){
         if(channel != amcpChannel)
             return;
 

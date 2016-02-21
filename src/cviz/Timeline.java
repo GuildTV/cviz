@@ -3,6 +3,7 @@ package cviz;
 import cviz.control.IControlInterface;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
+import cviz.timeline.commands.CgAddCommand;
 import cviz.timeline.commands.ICommand;
 import se.svt.caspar.amcp.AmcpChannel;
 import se.svt.caspar.amcp.AmcpLayer;
@@ -21,6 +22,7 @@ public class Timeline implements ITimeline {
 
     private final IControlInterface controlInterface;
 
+    private HashMap<String, String> templateData;
     private boolean running = false;
     private boolean killNow = false;
 
@@ -84,10 +86,34 @@ public class Timeline implements ITimeline {
         return activeTriggers.stream().anyMatch(t -> t.getType() == TriggerType.CUE);
     }
 
+    private boolean isRequiredTemplateDataDefined(){
+        for(Trigger t: triggers){
+            for(ICommand c: t.getCommands()){
+                if(!(c instanceof CgAddCommand))
+                    continue;
+
+                CgAddCommand command = (CgAddCommand) c;
+                String fieldName = command.getTemplateField();
+
+                if(!templateData.containsKey(fieldName)) {
+                    changeState(TimelineState.ERROR);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     @Override
     public void run() {
         if(running) return;
         running = true;
+
+        // check all template datasets are defined
+        if(!isRequiredTemplateDataDefined()) {
+            running = false;
+            return;
+        }
 
         changeState(TimelineState.RUN);
 
@@ -177,6 +203,8 @@ public class Timeline implements ITimeline {
         System.out.println("Received a cue");
         // TODO - maybe this should be buffered, otherwise there could be some timing issues
 
+        changeState(TimelineState.RUN);
+
         // find trigger to cue
         Optional<Trigger> waiting = activeTriggers.stream().filter(t -> t.getType() == TriggerType.CUE).findFirst();
         if(!waiting.isPresent()){
@@ -245,7 +273,11 @@ public class Timeline implements ITimeline {
     }
 
     public String getTemplateData(String fieldName){
-        //TODO
-        return fieldName;
+        return templateData.get(fieldName);
+    }
+
+    @Override
+    public void setTemplateData(HashMap<String, String> templateData) {
+        this.templateData = templateData != null ? templateData : new HashMap<>();
     }
 }

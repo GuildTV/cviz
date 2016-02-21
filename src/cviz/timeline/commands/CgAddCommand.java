@@ -13,6 +13,10 @@ public class CgAddCommand extends ICommand {
         this.templateField = templateField;
     }
 
+    public String getTemplateField(){
+        return templateField;
+    }
+
     @Override
     public boolean execute(ITimeline timeline) {
         AmcpLayer layer = timeline.getLayer(getLayerId());

@@ -6,6 +6,7 @@ import cviz.TimelineState;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 
 public class ConsoleControlInterface implements IControlInterface {
 
@@ -32,7 +33,7 @@ public class ConsoleControlInterface implements IControlInterface {
 							manager.loadTimeline(s);
 							break;
 						case READY:
-							manager.startTimeline();
+							manager.startTimeline(new HashMap<>());
 							break;
 						case CUE:
 							manager.triggerCue();

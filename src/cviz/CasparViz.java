@@ -4,6 +4,7 @@ import java.net.SocketException;
 
 import cviz.control.ConsoleControlInterface;
 import cviz.control.IControlInterface;
+import cviz.control.tcp.TCPControlInterface;
 
 public class CasparViz {
 
@@ -12,7 +13,7 @@ public class CasparViz {
 
 		TimelineManager manager = new TimelineManager();
 
-		IControlInterface controlInterface = new ConsoleControlInterface(manager);
+		IControlInterface controlInterface = new TCPControlInterface(manager);
 		manager.bindInterface(controlInterface);
 
 		new Thread(controlInterface).start();
