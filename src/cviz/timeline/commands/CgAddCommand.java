@@ -23,7 +23,12 @@ public class CgAddCommand extends ICommand {
 
         try {
             String templateData = timeline.getTemplateData(templateField);
-            layer.sendCommand("CG", "ADD 1 " + templateName + " 0 " + templateData);
+            if(templateData == null)
+                return false;
+
+            templateData = templateData.replace("\"", "\\\"");
+
+            layer.sendCommand("CG", "ADD 1 \"" + templateName + "\" 0 \"" + templateData + "\"");
 
             return true;
         } catch (Exception e){
