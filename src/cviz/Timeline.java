@@ -17,7 +17,7 @@ public class Timeline implements ITimeline, Runnable {
     private final LinkedList<Trigger> triggers;
     private final CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
     private final ConcurrentHashMap<Integer, LayerState> currentLayerState = new ConcurrentHashMap<>();
-    private final ArrayList<Integer> usedLayers = new ArrayList<>();
+    private final Set<Integer> usedLayers = new HashSet<>();
     private final HashMap<Integer, AmcpLayer> layerCache = new HashMap<>();
 
     private final IControlInterface controlInterface;

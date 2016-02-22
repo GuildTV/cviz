@@ -25,12 +25,15 @@ public class TCPControlState implements Serializable {
     }
 
     public void setState(TimelineState state){
+        switch(state){
+            case CLEAR:
+            case ERROR:
+                templateName = dataId = "";
+        }
         this.state = state;
     }
 
     public void runAction(ClientAction action){
-        templateName = action.getFilename() != null ? action.getFilename() : "";
-        dataId = action.getTemplateDataId() != null ? action.getTemplateDataId() : "";
 
         switch(action.getType()){
             case KILL:
@@ -38,8 +41,12 @@ public class TCPControlState implements Serializable {
                 break;
 
             case LOAD:
-                if(manager.loadTimeline(action.getFilename()))
+                if(manager.loadTimeline(action.getFilename())) {
+                    templateName = action.getFilename() != null ? action.getFilename() : "";
+                    dataId = action.getTemplateDataId() != null ? action.getTemplateDataId() : "";
+
                     manager.startTimeline(action.getTemplateData());
+                }
                 break;
 
             case CUE:
