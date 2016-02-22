@@ -5,6 +5,7 @@ import cviz.timeline.commands.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -142,6 +143,10 @@ public class Parser {
                 return new CgRemoveCommand(layerId);
             case "CGSTOP":
                 return new CgStopCommand(layerId);
+            case "TRANSFORM":
+                return new TransformCommand(layerId, Arrays.copyOfRange(parts, 2, parts.length));
+            case "OPACITY":
+                return new OpacityCommand(layerId, Arrays.copyOfRange(parts, 2, parts.length));
         }
         System.err.println("Bad command type " + parts[1]);
         throw new Exception("Unknown command type");

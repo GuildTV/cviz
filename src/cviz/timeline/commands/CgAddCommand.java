@@ -23,8 +23,10 @@ public class CgAddCommand extends ICommand {
 
         try {
             String templateData = timeline.getTemplateData(templateField);
+
+            // if we couldnt match the data, assume it was passed in direct from the timeline file
             if(templateData == null)
-                return false;
+                templateData = templateField;
 
             templateData = templateData.replace("\"", "\\\"");
 
