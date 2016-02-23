@@ -45,7 +45,7 @@ public class TimelineManager {
 
         File file = new File(timelinePath + name + timelineExt);
         if(!file.exists() || !file.isFile()){
-            System.err.println("Cannot find new timeline file");
+            System.err.println("Cannot find new timeline file: " + name);
             return false;
         }
 

@@ -4,6 +4,7 @@ import cviz.control.IControlInterface;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
 import cviz.timeline.commands.CgAddCommand;
+import cviz.timeline.commands.ClearCommand;
 import cviz.timeline.commands.ICommand;
 import se.svt.caspar.amcp.AmcpChannel;
 import se.svt.caspar.amcp.AmcpLayer;
@@ -150,14 +151,15 @@ public class Timeline implements ITimeline, Runnable {
             }
         }
 
-        // if kill command has been sent, then stop everything
+        // if kill command has been sent, then wipe everything
         if(killNow){
             changeState(TimelineState.ERROR);
             triggers.clear();
             activeTriggers.clear();
-
-            clearAllUserLayers();
         }
+
+        //ensure everything has been reset
+        clearAllUserLayers();
 
         System.out.println("Finished running timeline");
         running = false;
@@ -166,8 +168,8 @@ public class Timeline implements ITimeline, Runnable {
 
     private void clearAllUserLayers(){
         for(Integer l: usedLayers){
-            AmcpLayer layer = new AmcpLayer(channel, l);
-            layer.clear();
+            ICommand c = new ClearCommand(l);
+            c.execute(this);
             System.out.println("Clearing layer "  + l);
         }
     }

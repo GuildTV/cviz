@@ -37,7 +37,7 @@
     <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
     <jar jarfile="CasparViz.jar" basedir="${build}">
       <manifest>
-        <attribute name="Main-Class" value="CasparViz" />
+        <attribute name="Main-Class" value="cviz.CasparViz" />
       </manifest>
       <zipgroupfileset dir="${lib-dir}" includes="*.jar" />
       <zipgroupfileset dir="${lib-dir}" includes="*/*.jar" />
