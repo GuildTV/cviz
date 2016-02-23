@@ -93,7 +93,7 @@ public class Timeline implements ITimeline, Runnable {
                 CgAddCommand command = (CgAddCommand) c;
                 String fieldName = command.getTemplateField();
 
-                if(!templateData.containsKey(fieldName)) {
+                if(fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
                     changeState(TimelineState.ERROR);
                     return false;
                 }
@@ -268,7 +268,10 @@ public class Timeline implements ITimeline, Runnable {
     }
 
     public String getTemplateData(String fieldName){
-        return templateData.get(fieldName);
+        if(fieldName.indexOf("@") == 0)
+            return templateData.get(fieldName.substring(1));
+
+        return fieldName;
     }
 
     public void setTemplateData(HashMap<String, String> templateData) {
