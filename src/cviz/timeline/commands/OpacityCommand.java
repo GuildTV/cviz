@@ -27,6 +27,6 @@ public class OpacityCommand extends ICommand {
 
     @Override
     public String toString() {
-        return "CgAddCommand: " + getLayerId() + " " + parameters;
+        return "OpacityCommand: " + getLayerId() + " " + parameters;
     }
 }

@@ -28,6 +28,6 @@ public class TransformCommand extends ICommand {
 
     @Override
     public String toString() {
-        return "CgAddCommand: " + getLayerId() + " " + parameters;
+        return "TransformCommand: " + getLayerId() + " " + parameters;
     }
 }
