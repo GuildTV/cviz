@@ -1,7 +1,7 @@
 # C-Viz
 
 ## Description
-C-Viz is a timeline based controller for casparcg, designed to aid in controlling complex linear graphics with ease.
+C-Viz is a controller for CasparCG, inspired by Viz, that uses timelines to manage complex linear graphics.
 
 Documentation on the control protocol and timeline file syntax can be found [here](docs)
 
