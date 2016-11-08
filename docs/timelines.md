@@ -57,8 +57,7 @@ Note: putting an end trigger on a looped video may cause the trigger to fire on 
 These are run when the cued by a control interface. Only the first cue at the top of the trigger stack is run when cued.
 
 ```
-# @END layer {
-@END 100 {
+@Q {
   ...
 }
 ```
@@ -134,7 +133,7 @@ Changes the opacity of a layer. This relays parameters directly to casparcg, doc
 Transforms a layer. This relays parameters directly to casparcg, documentation an be found on their wiki: [CasparCG-Transform](http://casparcg.com/wiki/CasparCG_2.0_AMCP_Protocol#MIXER_FILL)
 
 ```
-  100 OPACITY 0 
+  100 TRANSFORM 0 0 100 100
 ```
 
 ### CgAdd

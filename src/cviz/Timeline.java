@@ -240,6 +240,7 @@ public class Timeline implements ITimeline, Runnable {
                 System.err.println("Tried to get state and failed");
             }
             // TODO - this check needs to ensure that an appropriate amount of time has passed
+            // NOTE: this also gets hit if the source video is a different framerate to the channel
             else if(state.getPreviousFrame() == frame && targetFrame > frame) {
                 // the video didn't play to the end for some reason, move on
                 System.err.println("Loop didn't reach the end, check your video!");

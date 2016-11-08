@@ -1,6 +1,9 @@
 build
 dist
+out
+.idea
 
 CasparViz.jar
 
 *.tl
+*.class
