@@ -251,7 +251,7 @@ public class Timeline implements ITimeline, Runnable {
                 // do it
                 executeTrigger(t);
             }
-            else if(frame == targetFrame) {
+            else if(frame >= targetFrame) {
                 t.setWaited();
             }
         }
