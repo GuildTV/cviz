@@ -13,8 +13,8 @@ public class CgAddCommand extends ICommand {
         this.templateField = templateField;
     }
 
-    public String getTemplateField(){
-        return templateField;
+    public String[] getTemplateFields() {
+        return new String[]{templateField};
     }
 
     @Override
@@ -25,7 +25,7 @@ public class CgAddCommand extends ICommand {
             String templateData = timeline.getTemplateData(templateField);
 
             // if we couldnt match the data, assume it was passed in direct from the timeline file
-            if(templateData == null)
+            if (templateData == null)
                 templateData = templateField;
 
             templateData = templateData.replace("\"", "\\\"");
@@ -33,7 +33,7 @@ public class CgAddCommand extends ICommand {
             layer.sendCommand("CG", "ADD 1 \"" + templateName + "\" 0 \"" + templateData + "\"");
 
             return true;
-        } catch (Exception e){
+        } catch (Exception e) {
             System.err.println("Failed to execute command: " + e.getMessage());
             return false;
         }

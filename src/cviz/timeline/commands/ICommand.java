@@ -13,6 +13,10 @@ public abstract class ICommand {
         return layerId;
     }
 
+    public String[] getTemplateFields(){
+        return new String[0];
+    }
+
     public abstract boolean execute(ITimeline timeline);
 
     public abstract String toString();

@@ -77,6 +77,8 @@ Clears the layer of the playing video or template.
 ### Load
 Loads the specified video file into a layer.
 
+If the filename parameter starts with an @, it is used as an id in the dataset passed when starting the timeline, otherwise the value is passed directly through.
+
 Note: videos must be loaded before running play.
 
 ```

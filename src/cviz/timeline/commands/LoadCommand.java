@@ -13,15 +13,24 @@ public class LoadCommand extends ICommand {
         this.filename = filename;
     }
 
+    public String[] getTemplateFields() {
+        return new String[]{filename};
+    }
+
+
     @Override
     public boolean execute(ITimeline timeline) {
         AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
-            layer.loadBg(new Video(filename));
-            timeline.setLayerState(getLayerId(), new LayerState(filename));
+            String resolvedFilename = timeline.getTemplateData(filename);
+            if (resolvedFilename == null)
+                resolvedFilename = filename;
+
+            layer.loadBg(new Video(resolvedFilename));
+            timeline.setLayerState(getLayerId(), new LayerState(resolvedFilename));
             return true;
-        } catch (Exception e){
+        } catch (Exception e) {
             System.err.println("Failed to execute command: " + e.getMessage());
             return false;
         }

@@ -38,7 +38,7 @@ public class Timeline implements ITimeline, Runnable {
         changeState(TimelineState.READY);
     }
 
-    public int getChannelNumber(){
+    public int getChannelNumber() {
         return channel.channelId();
     }
 
@@ -95,15 +95,12 @@ public class Timeline implements ITimeline, Runnable {
     private boolean isRequiredTemplateDataDefined() {
         for (Trigger t : triggers) {
             for (ICommand c : t.getCommands()) {
-                if (!(c instanceof CgAddCommand))
-                    continue;
-
-                CgAddCommand command = (CgAddCommand) c;
-                String fieldName = command.getTemplateField();
-
-                if (fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
-                    changeState(TimelineState.ERROR);
-                    return false;
+                String[] fields = c.getTemplateFields();
+                for (String fieldName : fields) {
+                    if (fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
+                        changeState(TimelineState.ERROR);
+                        return false;
+                    }
                 }
             }
         }
