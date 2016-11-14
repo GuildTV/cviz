@@ -25,18 +25,18 @@ public class ConsoleControlInterface implements IControlInterface {
 				String s = br.readLine();
 
 				if(s.equalsIgnoreCase("KILL")) {
-					manager.killTimeline();
+					manager.killTimeline("default");
 				} else {
 					switch(state){
 						case ERROR:
 						case CLEAR:
-							manager.loadTimeline(s);
+							manager.loadTimeline("default", s);
 							break;
 						case READY:
-							manager.startTimeline(new HashMap<>());
+							manager.startTimeline("default", new HashMap<>());
 							break;
 						case CUE:
-							manager.triggerCue();
+							manager.triggerCue("default");
 							break;
 						case RUN:
 							break;

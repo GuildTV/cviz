@@ -48,6 +48,9 @@ public class ControlClient implements Runnable {
                     ClientAction action = gson.fromJson(inputStream, ClientAction.class);
                     if(action == null || action.getType() == null) {
                         replyPing();
+                    } else if (action.getType() == ClientAction.ActionType.QUERY) {
+                        System.out.println("Received state query");
+                        sendState();
                     } else {
                         System.out.println("Received action: " + action);
                         state.runAction(action);
