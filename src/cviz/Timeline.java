@@ -1,5 +1,6 @@
 package cviz;
 
+import cviz.config.TimelineConfig;
 import cviz.control.IControlInterface;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Timeline implements ITimeline, Runnable {
+    private final TimelineConfig config;
     private final AmcpChannel channel;
     private final LinkedList<Trigger> triggers;
     private final CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
@@ -27,7 +29,8 @@ public class Timeline implements ITimeline, Runnable {
     private boolean running = false;
     private boolean killNow = false;
 
-    public Timeline(AmcpChannel channel, IControlInterface controlInterface, LinkedList<Trigger> triggers){
+    public Timeline(TimelineConfig tlConfig, AmcpChannel channel, IControlInterface controlInterface, LinkedList<Trigger> triggers) {
+        config = tlConfig;
         this.channel = channel;
         this.controlInterface = controlInterface;
         this.triggers = triggers;
@@ -35,7 +38,11 @@ public class Timeline implements ITimeline, Runnable {
         changeState(TimelineState.READY);
     }
 
-    private void changeState(TimelineState newState){
+    public int getChannelNumber(){
+        return channel.channelId();
+    }
+
+    private void changeState(TimelineState newState) {
         controlInterface.notifyState(newState);
     }
 
@@ -43,7 +50,7 @@ public class Timeline implements ITimeline, Runnable {
     public AmcpLayer getLayer(int layerId) {
         AmcpLayer layer = layerCache.get(layerId);
 
-        if(layer == null){
+        if (layer == null) {
             layer = new AmcpLayer(channel, layerId);
             layerCache.put(layerId, layer);
         }
@@ -51,12 +58,13 @@ public class Timeline implements ITimeline, Runnable {
         return layer;
     }
 
-    public void stop(){
-        System.out.println("Timeline received stop");
+    public void stop() {
+        System.out.println("Timeline " + config.getId() + " received stop");
         running = false;
     }
-    public void kill(){
-        System.out.println("Timeline received kill");
+
+    public void kill() {
+        System.out.println("Timeline " + config.getId() + " received kill");
         killNow = true;
         running = false;
     }
@@ -76,24 +84,24 @@ public class Timeline implements ITimeline, Runnable {
         return activeTriggers;
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return running;
     }
 
-    public boolean isWaitingForCue(){
+    public boolean isWaitingForCue() {
         return activeTriggers.stream().anyMatch(t -> t.getType() == TriggerType.CUE);
     }
 
-    private boolean isRequiredTemplateDataDefined(){
-        for(Trigger t: triggers){
-            for(ICommand c: t.getCommands()){
-                if(!(c instanceof CgAddCommand))
+    private boolean isRequiredTemplateDataDefined() {
+        for (Trigger t : triggers) {
+            for (ICommand c : t.getCommands()) {
+                if (!(c instanceof CgAddCommand))
                     continue;
 
                 CgAddCommand command = (CgAddCommand) c;
                 String fieldName = command.getTemplateField();
 
-                if(fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
+                if (fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
                     changeState(TimelineState.ERROR);
                     return false;
                 }
@@ -104,22 +112,22 @@ public class Timeline implements ITimeline, Runnable {
 
     @Override
     public void run() {
-        if(running) return;
+        if (running) return;
         running = true;
 
         // check all template datasets are defined
-        if(!isRequiredTemplateDataDefined()) {
+        if (!isRequiredTemplateDataDefined()) {
             running = false;
             return;
         }
 
         changeState(TimelineState.RUN);
 
-        System.out.println("Starting timeline");
+        System.out.println("Starting timeline " + config.getId());
 
         // collect the list of channels being altered
-        for(Trigger t: triggers){
-            for(ICommand c: t.getCommands()){
+        for (Trigger t : triggers) {
+            for (ICommand c : t.getCommands()) {
                 usedLayers.add(c.getLayerId());
             }
         }
@@ -132,13 +140,13 @@ public class Timeline implements ITimeline, Runnable {
         // run any immediate triggers
         triggerOnVideoFrame(-1, 0, 100);
 
-        while(running){
-            synchronized(this) {
-                if(triggers.isEmpty() && activeTriggers.isEmpty())
+        while (running) {
+            synchronized (this) {
+                if (triggers.isEmpty() && activeTriggers.isEmpty())
                     break;
             }
 
-            if(isWaitingForCue())
+            if (isWaitingForCue())
                 changeState(TimelineState.CUE);
             else
                 changeState(TimelineState.RUN);
@@ -152,7 +160,7 @@ public class Timeline implements ITimeline, Runnable {
         }
 
         // if kill command has been sent, then wipe everything
-        if(killNow){
+        if (killNow) {
             changeState(TimelineState.ERROR);
             triggers.clear();
             activeTriggers.clear();
@@ -166,15 +174,15 @@ public class Timeline implements ITimeline, Runnable {
         changeState(TimelineState.CLEAR);
     }
 
-    private void clearAllUserLayers(){
-        for(Integer l: usedLayers){
+    private void clearAllUserLayers() {
+        for (Integer l : usedLayers) {
             ICommand c = new ClearCommand(l);
             c.execute(this);
-            System.out.println("Clearing layer "  + l);
+            System.out.println("Clearing layer " + l);
         }
     }
 
-    private boolean promoteTriggersToActive(){
+    private boolean promoteTriggersToActive() {
         int moved = 0;
 
         while (!triggers.isEmpty()) {
@@ -184,15 +192,15 @@ public class Timeline implements ITimeline, Runnable {
             activeTriggers.add(t);
 
             // we only want to add up until a manual trigger
-            if(t.getType() == TriggerType.CUE)
+            if (t.getType() == TriggerType.CUE)
                 break;
         }
 
         return moved > 0;
     }
 
-    public synchronized void triggerCue(){
-        if(!running){
+    public synchronized void triggerCue() {
+        if (!running) {
             System.err.println("Received cue when not running");
             return;
         }
@@ -203,7 +211,7 @@ public class Timeline implements ITimeline, Runnable {
 
         // find trigger to cue
         Optional<Trigger> waiting = activeTriggers.stream().filter(t -> t.getType() == TriggerType.CUE).findFirst();
-        if(!waiting.isPresent()){
+        if (!waiting.isPresent()) {
             System.err.println("Received a cue without a trigger to fire");
             return;
         }
@@ -212,64 +220,62 @@ public class Timeline implements ITimeline, Runnable {
         executeTrigger(waiting.get());
         activeTriggers.remove(waiting.get());
 
-        if(!promoteTriggersToActive()){
+        if (!promoteTriggersToActive()) {
             System.out.println("Reached end of timeline");
         }
     }
 
-    public synchronized void triggerOnVideoFrame(int layer, long frame, long totalFrames){
-        if(!running) return;
+    public synchronized void triggerOnVideoFrame(int layer, long frame, long totalFrames) {
+        if (!running) return;
 
-        for(Trigger t: activeTriggers){
-            if(t.getType() == TriggerType.IMMEDIATE){
+        for (Trigger t : activeTriggers) {
+            if (t.getType() == TriggerType.IMMEDIATE) {
                 executeTrigger(t);
                 continue;
             }
 
-            if(t.getLayerId() != layer)
+            if (t.getLayerId() != layer)
                 continue;
 
             // determine the frame we are aiming for
             long targetFrame = totalFrames;
-            if(t.getType() != TriggerType.END) {
+            if (t.getType() != TriggerType.END) {
                 targetFrame = t.getTargetFrame();
             }
 
             LayerState state = currentLayerState.get(layer);
-            if(state == null){
+            if (state == null) {
                 System.err.println("Tried to get state and failed");
             }
             // TODO - this check needs to ensure that an appropriate amount of time has passed
             // NOTE: this also gets hit if the source video is a different framerate to the channel
-            else if(state.getPreviousFrame() == frame && targetFrame > frame) {
+            else if (state.getPreviousFrame() == frame && targetFrame > frame) {
                 // the video didn't play to the end for some reason, move on
                 System.err.println("Loop didn't reach the end, check your video!");
 
                 executeTrigger(t);
-            }
-            else if(t.hasWaited()) {
+            } else if (t.hasWaited()) {
                 // do it
                 executeTrigger(t);
-            }
-            else if(frame >= targetFrame) {
+            } else if (frame >= targetFrame) {
                 t.setWaited();
             }
         }
 
-        if(currentLayerState.containsKey(layer)) {
+        if (currentLayerState.containsKey(layer)) {
             currentLayerState.get(layer).setPreviousFrame(frame);
         }
     }
 
-    private void executeTrigger(Trigger trigger){
+    private void executeTrigger(Trigger trigger) {
         // TODO - may want to look into using a thread to do the sending/commands, as they block until they get a response
         // may cause issues with integrity of triggers lists though
         trigger.getCommands().forEach(c -> c.execute(this));
         activeTriggers.remove(trigger);
     }
 
-    public String getTemplateData(String fieldName){
-        if(fieldName.indexOf("@") == 0)
+    public String getTemplateData(String fieldName) {
+        if (fieldName.indexOf("@") == 0)
             return templateData.get(fieldName.substring(1));
 
         return fieldName;

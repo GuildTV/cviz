@@ -1,73 +1,87 @@
 package cviz;
 
+import cviz.config.Config;
+import cviz.config.TimelineConfig;
 import cviz.control.IControlInterface;
 import cviz.timeline.Parser;
 import cviz.timeline.Trigger;
 import se.svt.caspar.amcp.AmcpCasparDevice;
 import se.svt.caspar.amcp.AmcpChannel;
 
+import javax.sound.midi.Sequence;
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.stream.Stream;
 
 public class TimelineManager {
-    private static final int oscPort = 5253; // TODO - make this dynamic
-    private static final int amcpChannel = 1; // TODO - make dynamic
-
     private static final String timelinePath = "./";
     private static final String timelineExt = ".tl";
 
     private final AmcpCasparDevice host;
+    private final Config config;
+    private final Map<String, Timeline> timelines;
 
     private IControlInterface controlInterface;
 
-    private Timeline timeline;
-
-    public TimelineManager(){
-        OSC oscWrapper = new OSC(this, oscPort);
+    public TimelineManager(Config config) {
+        this.config = config;
+        OSC oscWrapper = new OSC(this, config.getOscPort());
         new Thread(oscWrapper).start();
 
-        host = new AmcpCasparDevice("127.0.0.1", 5250); // TODO - make dynamic
+        host = new AmcpCasparDevice(config.getCasparHost(), config.getCasparPort());
+        timelines = new HashMap<String, Timeline>();
     }
 
-    public void bindInterface(IControlInterface newInterface){
+    public void bindInterface(IControlInterface newInterface) {
         controlInterface = newInterface;
 
         controlInterface.notifyState(TimelineState.CLEAR);
     }
 
-    public synchronized boolean loadTimeline(String name){
-        if(timeline != null && timeline.isRunning()) {
-            System.err.println("Cannot load timeline when one is already running");
+    public synchronized boolean loadTimeline(String channelId, String name) {
+        Timeline timeline = timelines.get(channelId);
+        if (timeline != null && timeline.isRunning()) {
+            System.err.println("Cannot load timeline " + channelId + "when one is already running");
             return false;
         }
-        timeline = null;
+
+        if (timeline != null)
+            timelines.remove(channelId);
+
+        TimelineConfig tlConfig = config.findChannelById(channelId);
+        if (tlConfig == null) {
+            System.err.println("Channel " + channelId + " is not defined in config");
+            return false;
+        }
 
         File file = new File(timelinePath + name + timelineExt);
-        if(!file.exists() || !file.isFile()){
+        if (!file.exists() || !file.isFile()) {
             System.err.println("Cannot find new timeline file: " + name);
             return false;
         }
 
-        LinkedList<Trigger> timeline = Parser.Parse(file.getAbsolutePath());
-        if(timeline == null){
-            System.err.println("Failed to parse timeline file");
+        LinkedList<Trigger> sequence = Parser.Parse(file.getAbsolutePath());
+        if (timeline == null) {
+            System.err.println("Failed to parse timeline file: " + name);
             return false;
         }
 
-        AmcpChannel channel = new AmcpChannel(host, amcpChannel);
-        this.timeline = new Timeline(channel, controlInterface, timeline);
+        AmcpChannel channel = new AmcpChannel(host, tlConfig.getChannel());
+        timelines.put(channelId, new Timeline(tlConfig, channel, controlInterface, sequence));
 
-        System.out.println("Timeline ready");
+        System.out.println("Timeline " + channelId + "ready");
 
         return true;
     }
 
-    public synchronized boolean startTimeline(HashMap<String, String> templateData){
-        if(timeline == null)
+    public synchronized boolean startTimeline(String channelId, HashMap<String, String> templateData) {
+        Timeline timeline = timelines.get(channelId);
+        if (timeline == null)
             return false;
 
-        if(timeline.isRunning())
+        if (timeline.isRunning())
             return false;
 
         timeline.setTemplateData(templateData);
@@ -76,25 +90,27 @@ public class TimelineManager {
         return true;
     }
 
-    public synchronized void killTimeline(){
-        if(timeline != null)
+    public synchronized void killTimeline(String channelId) {
+        Timeline timeline = timelines.get(channelId);
+        if (timeline != null)
             timeline.kill();
     }
 
-    public synchronized void triggerCue(){
-        if(timeline == null)
+    public synchronized void triggerCue(String channelId) {
+        Timeline timeline = timelines.get(channelId);
+        if (timeline == null)
             return;
 
         timeline.triggerCue();
     }
 
-    public synchronized void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames){
-        if(channel != amcpChannel)
-            return;
+    public synchronized void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames) {
+        Timeline[] toTrigger =  timelines.values().stream().filter(t -> t.getChannelNumber() == channel).toArray(Timeline[]::new);
+        for(Timeline timeline: toTrigger){
+            if (timeline == null)
+                return;
 
-        if(timeline == null)
-            return;
-
-        timeline.triggerOnVideoFrame(layer, frame, totalFrames);
+            timeline.triggerOnVideoFrame(layer, frame, totalFrames);
+        }
     }
 }

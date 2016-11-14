@@ -1,6 +1,7 @@
 package cviz.control.tcp;
 
 import cviz.TimelineManager;
+import cviz.config.Config;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -8,15 +9,15 @@ import java.net.Socket;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ControlServer implements Runnable {
-    private static final int portNumber = 3456;
-
+    private final Config config;
     private final TCPControlState state;
 
     private CopyOnWriteArrayList<ControlClient> clients = new CopyOnWriteArrayList<>();
 
     private ServerSocket server = null;
 
-    public ControlServer(TCPControlState state){
+    public ControlServer(Config config, TCPControlState state) {
+        this.config = config;
         this.state = state;
     }
 
@@ -30,13 +31,13 @@ public class ControlServer implements Runnable {
 
         // try and open the server
         try {
-            server = new ServerSocket(portNumber);
+            server = new ServerSocket(config.getPort());
         } catch (IOException e) {
             System.err.println("Failed to start server: " + e.getMessage());
             System.exit(10);
         }
 
-        System.out.println("Server started on port: " + portNumber);
+        System.out.println("Server started on port: " + config.getPort());
 
         while (server != null) {
             try {

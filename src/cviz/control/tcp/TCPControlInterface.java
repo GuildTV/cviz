@@ -2,6 +2,7 @@ package cviz.control.tcp;
 
 import cviz.TimelineManager;
 import cviz.TimelineState;
+import cviz.config.Config;
 import cviz.control.IControlInterface;
 
 public class TCPControlInterface implements IControlInterface {
@@ -11,11 +12,11 @@ public class TCPControlInterface implements IControlInterface {
 
     private TimelineState newState;
 
-    public TCPControlInterface(TimelineManager manager){
+    public TCPControlInterface(Config config, TimelineManager manager){
         state = new TCPControlState(manager);
         newState = TimelineState.ERROR;
 
-        this.server = new ControlServer(state);
+        this.server = new ControlServer(config, state);
         new Thread(this.server).start();
     }
 

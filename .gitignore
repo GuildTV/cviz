@@ -4,6 +4,7 @@ out
 .idea
 
 CasparViz.jar
+config.json
 
 *.tl
 *.class
