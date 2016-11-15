@@ -2,6 +2,7 @@ package cviz.control;
 
 import cviz.TimelineManager;
 import cviz.TimelineState;
+import cviz.state.State;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +13,7 @@ public class ConsoleControlInterface implements IControlInterface {
 
 	private final TimelineManager manager;
 
-	private TimelineState state = TimelineState.CLEAR;
+	private State state;
 
 	public ConsoleControlInterface(TimelineManager manager) {
 		this.manager = manager;
@@ -27,10 +28,10 @@ public class ConsoleControlInterface implements IControlInterface {
 				if(s.equalsIgnoreCase("KILL")) {
 					manager.killTimeline("default");
 				} else {
-					switch(state){
+					switch(state.getState()){
 						case ERROR:
 						case CLEAR:
-							manager.loadTimeline("default", "default", s);
+							manager.loadTimeline("default", "default", s, "");
 							break;
 						case READY:
 							manager.startTimeline("default", new HashMap<>());
@@ -52,12 +53,10 @@ public class ConsoleControlInterface implements IControlInterface {
 	}
 
 	@Override
-	public void notifyState(TimelineState state) {
-		if(this.state == state) return;
-
+	public void notifyState(State state) {
 		this.state = state;
 
-		switch(state){
+		switch(state.getState()){
 			case ERROR:
 				System.err.println("Timeline had an error");
 				break;

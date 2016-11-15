@@ -4,33 +4,34 @@ import cviz.TimelineManager;
 import cviz.TimelineState;
 import cviz.config.Config;
 import cviz.control.IControlInterface;
+import cviz.state.State;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class TCPControlInterface implements IControlInterface {
 
     private final ControlServer server;
-    private final TCPControlState state;
-
-    private TimelineState newState;
+    private final ConcurrentLinkedQueue<State> stateChangeQueue;
 
     public TCPControlInterface(Config config, TimelineManager manager){
-        state = new TCPControlState(manager);
-        newState = TimelineState.ERROR;
+        this.stateChangeQueue = new ConcurrentLinkedQueue();
 
-        this.server = new ControlServer(config, state);
+        this.server = new ControlServer(config, manager);
         new Thread(this.server).start();
     }
 
     @Override
-    public void notifyState(TimelineState state) {
-        newState = state;
+    public void notifyState(State state) {
+        stateChangeQueue.add(state);
     }
 
     @Override
     public void run() {
         while(true){
-            if(newState != state.getState()){
-                state.setState(newState);
-                processStateChange();
+            State nextState = stateChangeQueue.poll();
+            if (nextState != null) {
+                server.sendState(nextState);
+                continue;
             }
 
             try {
@@ -38,10 +39,5 @@ public class TCPControlInterface implements IControlInterface {
             } catch (InterruptedException e) {
             }
         }
-    }
-
-    private void processStateChange(){
-        System.out.println("New state " + state);
-        server.sendState();
     }
 }

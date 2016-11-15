@@ -2,6 +2,7 @@ package cviz.control.tcp;
 
 import cviz.TimelineManager;
 import cviz.config.Config;
+import cviz.state.State;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -10,15 +11,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ControlServer implements Runnable {
     private final Config config;
-    private final TCPControlState state;
+    private final TimelineManager manager;
 
     private CopyOnWriteArrayList<ControlClient> clients = new CopyOnWriteArrayList<>();
 
     private ServerSocket server = null;
 
-    public ControlServer(Config config, TCPControlState state) {
+    public ControlServer(Config config, TimelineManager manager) {
         this.config = config;
-        this.state = state;
+        this.manager = manager;
     }
 
     @Override
@@ -45,12 +46,12 @@ public class ControlServer implements Runnable {
                 Socket socket = server.accept();
                 System.out.println("client connected");
 
-                ControlClient client = new ControlClient(state, socket);
+                ControlClient client = new ControlClient(manager, socket);
                 clients.add(client);
 
                 // handle messages from the client
                 new Thread(client).start();
-                client.sendState();
+                client.sendCompleteState();
                 System.out.println("client ready");
 
             } catch (Exception e) {
@@ -73,7 +74,7 @@ public class ControlServer implements Runnable {
         server = null;
     }
 
-    public void sendState() {
-        clients.stream().filter(c -> c.isConnected()).forEach(c -> c.sendState());
+    public void sendState(State state) {
+        clients.stream().filter(c -> c.isConnected()).forEach(c -> c.sendState(state));
     }
 }
