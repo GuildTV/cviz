@@ -37,20 +37,20 @@ public class TCPControlState implements Serializable {
 
         switch(action.getType()){
             case KILL:
-                manager.killTimeline(action.getChannel());
+                manager.killTimeline(action.getName());
                 break;
 
             case LOAD:
-                if(manager.loadTimeline(action.getChannel(), action.getFilename())) {
+                if(manager.loadTimeline(action.getChannel(), action.getName(), action.getFilename())) {
                     templateName = action.getFilename() != null ? action.getFilename() : "";
                     dataId = action.getTemplateDataId() != null ? action.getTemplateDataId() : "";
 
-                    manager.startTimeline(action.getChannel(), action.getTemplateData());
+                    manager.startTimeline(action.getName(), action.getTemplateData());
                 }
                 break;
 
             case CUE:
-                manager.triggerCue(action.getChannel());
+                manager.triggerCue(action.getName());
                 break;
 
             case QUERY:

@@ -2,11 +2,11 @@ package cviz.config;
 
 import java.io.Serializable;
 
-public class TimelineConfig implements Serializable {
+public class ChannelConfig implements Serializable {
     private String id;
     private int channel;
 
-    public TimelineConfig(String id, int channel) {
+    public ChannelConfig(String id, int channel) {
         this.id = id;
         this.channel = channel;
     }

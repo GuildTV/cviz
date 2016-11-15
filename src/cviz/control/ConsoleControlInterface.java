@@ -30,7 +30,7 @@ public class ConsoleControlInterface implements IControlInterface {
 					switch(state){
 						case ERROR:
 						case CLEAR:
-							manager.loadTimeline("default", s);
+							manager.loadTimeline("default", "default", s);
 							break;
 						case READY:
 							manager.startTimeline("default", new HashMap<>());

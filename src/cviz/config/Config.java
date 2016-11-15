@@ -10,9 +10,9 @@ public class Config implements Serializable {
     private String casparHost;
     private int casparPort;
 
-    private TimelineConfig[] channels;
+    private ChannelConfig[] channels;
 
-    public Config(int port, int oscPort, String casparHost, int casparPort, TimelineConfig[] channels) {
+    public Config(int port, int oscPort, String casparHost, int casparPort, ChannelConfig[] channels) {
         this.port = port;
         this.oscPort = oscPort;
         this.casparHost = casparHost;
@@ -48,15 +48,15 @@ public class Config implements Serializable {
         return casparPort;
     }
 
-    public TimelineConfig[] getChannels() {
+    public ChannelConfig[] getChannels() {
         if (channels == null)
-            return new TimelineConfig[]{new TimelineConfig("default", 1)};
+            return new ChannelConfig[]{new ChannelConfig("default", 1)};
 
         return channels;
     }
 
-    public TimelineConfig findChannelById(String id) {
-        for (TimelineConfig channel : channels) {
+    public ChannelConfig findChannelById(String id) {
+        for (ChannelConfig channel : channels) {
             if (channel.getId().equals(id))
                 return channel;
         }
