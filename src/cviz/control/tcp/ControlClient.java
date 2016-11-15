@@ -98,6 +98,9 @@ public class ControlClient implements Runnable {
                         case Channels:
                             sendChannels();
                             break;
+                        case State:
+                            sendState();
+                            break;
                         default:
                             System.err.println("Got unknown command type from client: " + command.getType());
                     }
@@ -115,6 +118,13 @@ public class ControlClient implements Runnable {
                 close();
             }
         }
+    }
+
+    private void sendState() {
+        State[] state = manager.getCompleteState();
+        System.out.println("Found " + state.length + " running timelines");
+        OutboundMessage msg = OutboundMessage.CreateState(state);
+        sendOutbound(msg);
     }
 
     private boolean performAction(ClientAction action) {

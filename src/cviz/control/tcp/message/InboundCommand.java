@@ -14,6 +14,8 @@ public class InboundCommand implements Serializable {
         Timelines,
         @SerializedName("channels")
         Channels,
+        @SerializedName("state")
+        State,
     }
 
     private Types type;
