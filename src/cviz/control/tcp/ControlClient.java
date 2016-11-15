@@ -15,7 +15,6 @@ import cviz.state.State;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.channels.Channel;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -28,7 +27,6 @@ public class ControlClient implements Runnable {
 
     private final JsonReader inputStream;
     private final JsonWriter outputStream;
-    private final OutputStream rawOutputStream;
 
     public ControlClient(TimelineManager manager, Socket socket) throws IOException {
         this.manager = manager;
@@ -36,7 +34,7 @@ public class ControlClient implements Runnable {
         this.connected = true;
 
         try {
-            rawOutputStream = socket.getOutputStream();
+            OutputStream rawOutputStream = socket.getOutputStream();
             outputStream = new JsonWriter(new OutputStreamWriter(rawOutputStream, "UTF-8"));
             inputStream = new JsonReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
             inputStream.setLenient(true);
@@ -108,7 +106,7 @@ public class ControlClient implements Runnable {
                 } else {
                     try {
                         Thread.sleep(10);
-                    } catch (InterruptedException e) {
+                    } catch (InterruptedException ignored) {
                     }
                 }
 
@@ -142,7 +140,7 @@ public class ControlClient implements Runnable {
     }
 
     private void sendTimelines() {
-        ArrayList<TimelineEntry> timelines = TimelineListing.ScanDir(new File(TimelineManager.timelinePath));
+        ArrayList<TimelineEntry> timelines = TimelineListing.ScanDir(new File(manager.getConfig().getTemplateDir()));
         System.out.println("Found " + timelines.size() + " timelines");
         OutboundMessage msg = OutboundMessage.CreateTimelines(timelines);
         sendOutbound(msg);
@@ -163,7 +161,7 @@ public class ControlClient implements Runnable {
                 if (socket != null)
                     socket.close();
                 System.err.println("Closing Connection");
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
             socket = null;
         }
@@ -195,7 +193,7 @@ public class ControlClient implements Runnable {
                 if (socket != null) {
                     try {
                         socket.close();
-                    } catch (IOException e) {
+                    } catch (IOException ignored) {
                     }
                 }
                 socket = null;

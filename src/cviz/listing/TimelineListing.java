@@ -10,10 +10,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class TimelineListing {
-    public static ArrayList<TimelineEntry> Scan() {
-        return ScanDir(new File(TimelineManager.timelinePath));
-    }
-
     public static ArrayList<TimelineEntry> ScanDir(File dir) {
         ArrayList<TimelineEntry> timelines = new ArrayList<>();
 

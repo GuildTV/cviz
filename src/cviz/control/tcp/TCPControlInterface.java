@@ -14,7 +14,7 @@ public class TCPControlInterface implements IControlInterface {
     private final ConcurrentLinkedQueue<State> stateChangeQueue;
 
     public TCPControlInterface(Config config, TimelineManager manager){
-        this.stateChangeQueue = new ConcurrentLinkedQueue();
+        this.stateChangeQueue = new ConcurrentLinkedQueue<>();
 
         this.server = new ControlServer(config, manager);
         new Thread(this.server).start();
@@ -36,7 +36,7 @@ public class TCPControlInterface implements IControlInterface {
 
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
             }
         }
     }

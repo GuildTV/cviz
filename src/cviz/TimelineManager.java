@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.Map;
 
 public class TimelineManager {
-    public static final String timelinePath = "./";
     public static final String timelineExt = ".tl";
 
     private final AmcpCasparDevice host;
@@ -30,7 +29,7 @@ public class TimelineManager {
         new Thread(oscWrapper).start();
 
         host = new AmcpCasparDevice(config.getCasparHost(), config.getCasparPort());
-        timelines = new HashMap<String, Timeline>();
+        timelines = new HashMap<>();
     }
 
     public Config getConfig(){
@@ -42,11 +41,11 @@ public class TimelineManager {
     }
 
     public synchronized State[] getCompleteState(){
-        return timelines.values().stream().map(t -> t.getState()).toArray(State[]::new);
+        return timelines.values().stream().map(Timeline::getState).toArray(State[]::new);
     }
 
     public synchronized State getStateForTimelineId(String timelineId){
-        return timelines.values().stream().map(t -> t.getState()).filter(s -> s.getTimelineId().equals(timelineId)).findFirst().orElse(null);
+        return timelines.values().stream().map(Timeline::getState).filter(s -> s.getTimelineId().equals(timelineId)).findFirst().orElse(null);
     }
 
     public synchronized boolean loadTimeline(String channelId, String timelineId, String filename, String instanceId) {
@@ -65,7 +64,7 @@ public class TimelineManager {
             return false;
         }
 
-        File file = new File(timelinePath + filename + timelineExt);
+        File file = new File(config.getTemplateDir() + filename + timelineExt);
         if (!file.exists() || !file.isFile()) {
             System.err.println("Cannot find new timeline file: " + filename);
             return false;

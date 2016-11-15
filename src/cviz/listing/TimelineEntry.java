@@ -20,7 +20,7 @@ public class TimelineEntry implements Serializable {
         return parameters;
     }
 
-    public String toString(){
+    public String toString() {
         return "Timeline: " + getName() + ", parameters: " + Arrays.toString(getParameters());
     }
 }

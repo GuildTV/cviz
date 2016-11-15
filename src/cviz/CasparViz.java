@@ -1,12 +1,10 @@
 package cviz;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.net.SocketException;
 
 import com.google.gson.Gson;
 import cviz.config.Config;
-import cviz.control.ConsoleControlInterface;
 import cviz.control.IControlInterface;
 import cviz.control.tcp.TCPControlInterface;
 

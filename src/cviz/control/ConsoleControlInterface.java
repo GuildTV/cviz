@@ -1,7 +1,6 @@
 package cviz.control;
 
 import cviz.TimelineManager;
-import cviz.TimelineState;
 import cviz.state.State;
 
 import java.io.BufferedReader;

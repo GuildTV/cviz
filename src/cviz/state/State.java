@@ -5,7 +5,7 @@ import cviz.control.IControlInterface;
 
 import java.io.Serializable;
 
-public class State implements Serializable{
+public class State implements Serializable {
     private transient final IControlInterface controlInterface;
 
     private final String timelineId;
@@ -14,7 +14,7 @@ public class State implements Serializable{
     private TimelineState state;
     private String stateMessage;
 
-    public State(IControlInterface controlInterface, String timelineId, String filename, String instanceName){
+    public State(IControlInterface controlInterface, String timelineId, String filename, String instanceName) {
         this.controlInterface = controlInterface;
         this.timelineId = timelineId;
         this.filename = filename;
@@ -25,10 +25,11 @@ public class State implements Serializable{
         this.stateMessage = null;
     }
 
-    public void setState(TimelineState state){
+    public void setState(TimelineState state) {
         setState(state, null);
     }
-    public void setState(TimelineState state, String stateMessage){
+
+    public void setState(TimelineState state, String stateMessage) {
         this.state = state;
         this.stateMessage = stateMessage;
 

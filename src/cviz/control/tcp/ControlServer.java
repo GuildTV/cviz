@@ -69,12 +69,12 @@ public class ControlServer implements Runnable {
         try {
             System.out.println("Stopping Server");
             server.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
         server = null;
     }
 
     public void sendState(State state) {
-        clients.stream().filter(c -> c.isConnected()).forEach(c -> c.sendState(state));
+        clients.stream().filter(ControlClient::isConnected).forEach(c -> c.sendState(state));
     }
 }

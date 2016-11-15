@@ -11,6 +11,7 @@ import se.svt.caspar.amcp.AmcpLayer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class Timeline implements ITimeline, Runnable {
     private final String timelineId;
@@ -130,9 +131,7 @@ public class Timeline implements ITimeline, Runnable {
 
         // collect the list of layers being altered
         for (Trigger t : remainingTriggers) {
-            for (ICommand c : t.getCommands()) {
-                usedLayers.add(c.getLayerId());
-            }
+            usedLayers.addAll(t.getCommands().stream().map(ICommand::getLayerId).collect(Collectors.toList()));
         }
 
         System.out.println("Template spans " + usedLayers.size() + " layers");
