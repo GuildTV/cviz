@@ -23,7 +23,7 @@ public class Timeline implements ITimeline, Runnable {
 
     private final IControlInterface controlInterface;
 
-    private HashMap<String, String> templateData;
+    private HashMap<String, String> parameters;
     private boolean running = false;
     private boolean killNow = false;
 
@@ -91,10 +91,10 @@ public class Timeline implements ITimeline, Runnable {
         return activeTriggers.stream().anyMatch(t -> t.getType() == TriggerType.CUE);
     }
 
-    private boolean isRequiredTemplateDataDefined() {
-        ArrayList<String> fields = getTemplateDataFields(triggers);
+    private boolean areRequiredParametersDefined() {
+        ArrayList<String> fields = getParameterNames(triggers);
         for (String fieldName : fields) {
-            if (fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
+            if (fieldName.indexOf("@") == 0 && !parameters.containsKey(fieldName.substring(1))) {
                 changeState(TimelineState.ERROR);
                 return false;
             }
@@ -102,7 +102,7 @@ public class Timeline implements ITimeline, Runnable {
         return true;
     }
 
-    public static ArrayList<String> getTemplateDataFields(LinkedList<Trigger> triggers){
+    public static ArrayList<String> getParameterNames(LinkedList<Trigger> triggers){
         ArrayList<String> fields = new ArrayList<>();
 
         for (Trigger t : triggers) {
@@ -120,7 +120,7 @@ public class Timeline implements ITimeline, Runnable {
         running = true;
 
         // check all template datasets are defined
-        if (!isRequiredTemplateDataDefined()) {
+        if (!areRequiredParametersDefined()) {
             running = false;
             return;
         }
@@ -278,14 +278,14 @@ public class Timeline implements ITimeline, Runnable {
         activeTriggers.remove(trigger);
     }
 
-    public String getTemplateData(String fieldName) {
+    public String getParameter(String fieldName) {
         if (fieldName.indexOf("@") == 0)
-            return templateData.get(fieldName.substring(1));
+            return parameters.get(fieldName.substring(1));
 
         return fieldName;
     }
 
-    public void setTemplateData(HashMap<String, String> templateData) {
-        this.templateData = templateData != null ? templateData : new HashMap<>();
+    public void setParameters(HashMap<String, String> parameters) {
+        this.parameters = parameters != null ? parameters : new HashMap<>();
     }
 }

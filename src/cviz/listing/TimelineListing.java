@@ -51,7 +51,7 @@ public class TimelineListing {
             return null;
         }
 
-        ArrayList<String> fields = Timeline.getTemplateDataFields(triggers);
+        ArrayList<String> fields = Timeline.getParameterNames(triggers);
 
         return new TimelineEntry(file.getName(), fields.toArray(new String[fields.size()]));
     }

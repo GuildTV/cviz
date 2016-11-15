@@ -26,7 +26,7 @@ public class LoadCommand extends ICommand {
         AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
-            String resolvedFilename = timeline.getTemplateData(filename);
+            String resolvedFilename = timeline.getParameter(filename);
             if (resolvedFilename == null)
                 resolvedFilename = filename;
 

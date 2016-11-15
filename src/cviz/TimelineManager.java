@@ -74,7 +74,7 @@ public class TimelineManager {
         return true;
     }
 
-    public synchronized boolean startTimeline(String timelineId, HashMap<String, String> templateData) {
+    public synchronized boolean startTimeline(String timelineId, HashMap<String, String> parameters) {
         Timeline timeline = timelines.get(timelineId);
         if (timeline == null)
             return false;
@@ -82,7 +82,7 @@ public class TimelineManager {
         if (timeline.isRunning())
             return false;
 
-        timeline.setTemplateData(templateData);
+        timeline.setParameters(parameters);
 
         new Thread(timeline).start();
         return true;
