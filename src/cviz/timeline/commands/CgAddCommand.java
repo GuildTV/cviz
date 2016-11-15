@@ -14,6 +14,9 @@ public class CgAddCommand extends ICommand {
     }
 
     public String[] getTemplateFields() {
+        if (templateField.indexOf("@") != 0)
+            return new String[0];
+
         return new String[]{templateField};
     }
 

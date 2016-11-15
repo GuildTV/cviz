@@ -16,8 +16,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class TimelineManager {
-    private static final String timelinePath = "./";
-    private static final String timelineExt = ".tl";
+    public static final String timelinePath = "./";
+    public static final String timelineExt = ".tl";
 
     private final AmcpCasparDevice host;
     private final Config config;
@@ -63,7 +63,7 @@ public class TimelineManager {
         }
 
         LinkedList<Trigger> sequence = Parser.Parse(file.getAbsolutePath());
-        if (timeline == null) {
+        if (sequence == null) {
             System.err.println("Failed to parse timeline file: " + name);
             return false;
         }

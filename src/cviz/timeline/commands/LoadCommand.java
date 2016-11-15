@@ -14,6 +14,9 @@ public class LoadCommand extends ICommand {
     }
 
     public String[] getTemplateFields() {
+        if (filename.indexOf("@") != 0)
+            return new String[0];
+
         return new String[]{filename};
     }
 

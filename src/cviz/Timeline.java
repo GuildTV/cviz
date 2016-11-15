@@ -4,7 +4,6 @@ import cviz.config.TimelineConfig;
 import cviz.control.IControlInterface;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
-import cviz.timeline.commands.CgAddCommand;
 import cviz.timeline.commands.ClearCommand;
 import cviz.timeline.commands.ICommand;
 import se.svt.caspar.amcp.AmcpChannel;
@@ -43,7 +42,8 @@ public class Timeline implements ITimeline, Runnable {
     }
 
     private void changeState(TimelineState newState) {
-        controlInterface.notifyState(newState);
+        if (controlInterface != null)
+            controlInterface.notifyState(newState);
     }
 
     @Override
@@ -93,18 +93,26 @@ public class Timeline implements ITimeline, Runnable {
     }
 
     private boolean isRequiredTemplateDataDefined() {
-        for (Trigger t : triggers) {
-            for (ICommand c : t.getCommands()) {
-                String[] fields = c.getTemplateFields();
-                for (String fieldName : fields) {
-                    if (fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
-                        changeState(TimelineState.ERROR);
-                        return false;
-                    }
-                }
+        ArrayList<String> fields = getTemplateDataFields(triggers);
+        for (String fieldName : fields) {
+            if (fieldName.indexOf("@") == 0 && !templateData.containsKey(fieldName.substring(1))) {
+                changeState(TimelineState.ERROR);
+                return false;
             }
         }
         return true;
+    }
+
+    public static ArrayList<String> getTemplateDataFields(LinkedList<Trigger> triggers){
+        ArrayList<String> fields = new ArrayList<>();
+
+        for (Trigger t : triggers) {
+            for (ICommand c : t.getCommands()) {
+                fields.addAll(Arrays.asList(c.getTemplateFields()));
+            }
+        }
+
+        return fields;
     }
 
     @Override
