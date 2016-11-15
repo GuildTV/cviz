@@ -23,7 +23,11 @@ public class LoadCommand extends AmcpCommand {
         if (!super.execute(timeline))
             return false;
 
-        timeline.setLayerState(getLayerId(), new LayerState(filename));
+        String resolvedFilename = timeline.getParameter(filename);
+        if (resolvedFilename == null)
+            resolvedFilename = filename;
+
+        timeline.setLayerState(getLayerId(), new LayerState(resolvedFilename));
         return true;
     }
 

@@ -25,7 +25,7 @@ public class CgAddCommand extends ICommand {
         AmcpLayer layer = timeline.getLayer(getLayerId());
 
         try {
-            String templateData = timeline.getTemplateData(templateField);
+            String templateData = timeline.getParameter(templateField);
 
             // if we couldnt match the data, assume it was passed in direct from the timeline file
             if(templateData == null)
