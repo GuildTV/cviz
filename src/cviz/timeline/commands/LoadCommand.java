@@ -11,6 +11,13 @@ public class LoadCommand extends AmcpCommand {
         this.filename = filename;
     }
 
+    public String[] getTemplateFields() {
+        if (filename.indexOf("@") != 0)
+            return new String[0];
+
+        return new String[]{filename};
+    }
+
     @Override
     public boolean execute(ITimeline timeline) {
         if (!super.execute(timeline))
