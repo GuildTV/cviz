@@ -14,13 +14,15 @@ public class ClientAction implements Serializable {
     }
 
     private String channel;
+    private String name;
     private ActionType type;
     private String filename;
     private String templateDataId;
     private HashMap<String, String> templateData;
 
-    public ClientAction(String channel, ActionType type, String filename, String templateDataId, HashMap<String, String> templateData) {
+    public ClientAction(String channel, String name, ActionType type, String filename, String templateDataId, HashMap<String, String> templateData) {
         this.channel = channel;
+        this.name = name;
         this.type = type;
         this.filename = filename;
         this.templateDataId = templateDataId;
@@ -28,10 +30,16 @@ public class ClientAction implements Serializable {
     }
 
     public String getChannel() {
-        if (channel == null || channel == "")
+        if (channel == null || channel.length() == 0)
             return "default";
 
         return channel;
+    }
+    public String getName() {
+        if (name == null || name.length() == 0)
+            return "default";
+
+        return name;
     }
 
     public ActionType getType() {

@@ -1,19 +1,17 @@
 package cviz;
 
 import cviz.config.Config;
-import cviz.config.TimelineConfig;
+import cviz.config.ChannelConfig;
 import cviz.control.IControlInterface;
 import cviz.timeline.Parser;
 import cviz.timeline.Trigger;
 import se.svt.caspar.amcp.AmcpCasparDevice;
 import se.svt.caspar.amcp.AmcpChannel;
 
-import javax.sound.midi.Sequence;
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.stream.Stream;
 
 public class TimelineManager {
     public static final String timelinePath = "./";
@@ -40,18 +38,18 @@ public class TimelineManager {
         controlInterface.notifyState(TimelineState.CLEAR);
     }
 
-    public synchronized boolean loadTimeline(String channelId, String name) {
-        Timeline timeline = timelines.get(channelId);
+    public synchronized boolean loadTimeline(String channelId, String timelineId, String name) {
+        Timeline timeline = timelines.get(timelineId);
         if (timeline != null && timeline.isRunning()) {
-            System.err.println("Cannot load timeline " + channelId + "when one is already running");
+            System.err.println("Cannot load timeline " + timelineId + "when one is already running");
             return false;
         }
 
         if (timeline != null)
             timelines.remove(channelId);
 
-        TimelineConfig tlConfig = config.findChannelById(channelId);
-        if (tlConfig == null) {
+        ChannelConfig channelConfig = config.findChannelById(channelId);
+        if (channelConfig == null) {
             System.err.println("Channel " + channelId + " is not defined in config");
             return false;
         }
@@ -68,16 +66,16 @@ public class TimelineManager {
             return false;
         }
 
-        AmcpChannel channel = new AmcpChannel(host, tlConfig.getChannel());
-        timelines.put(channelId, new Timeline(tlConfig, channel, controlInterface, sequence));
+        AmcpChannel channel = new AmcpChannel(host, channelConfig.getChannel());
+        timelines.put(timelineId, new Timeline(timelineId, channel, controlInterface, sequence));
 
-        System.out.println("Timeline " + channelId + "ready");
+        System.out.println("Timeline " + timelineId + "ready");
 
         return true;
     }
 
-    public synchronized boolean startTimeline(String channelId, HashMap<String, String> templateData) {
-        Timeline timeline = timelines.get(channelId);
+    public synchronized boolean startTimeline(String timelineId, HashMap<String, String> templateData) {
+        Timeline timeline = timelines.get(timelineId);
         if (timeline == null)
             return false;
 
@@ -90,14 +88,14 @@ public class TimelineManager {
         return true;
     }
 
-    public synchronized void killTimeline(String channelId) {
-        Timeline timeline = timelines.get(channelId);
+    public synchronized void killTimeline(String timelineId) {
+        Timeline timeline = timelines.get(timelineId);
         if (timeline != null)
             timeline.kill();
     }
 
-    public synchronized void triggerCue(String channelId) {
-        Timeline timeline = timelines.get(channelId);
+    public synchronized void triggerCue(String timelineId) {
+        Timeline timeline = timelines.get(timelineId);
         if (timeline == null)
             return;
 

@@ -1,6 +1,5 @@
 package cviz;
 
-import cviz.config.TimelineConfig;
 import cviz.control.IControlInterface;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
@@ -14,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Timeline implements ITimeline, Runnable {
-    private final TimelineConfig config;
+    private final String timelineId;
     private final AmcpChannel channel;
     private final LinkedList<Trigger> triggers;
     private final CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
@@ -28,8 +27,8 @@ public class Timeline implements ITimeline, Runnable {
     private boolean running = false;
     private boolean killNow = false;
 
-    public Timeline(TimelineConfig tlConfig, AmcpChannel channel, IControlInterface controlInterface, LinkedList<Trigger> triggers) {
-        config = tlConfig;
+    public Timeline(String timelineId, AmcpChannel channel, IControlInterface controlInterface, LinkedList<Trigger> triggers) {
+        this.timelineId = timelineId;
         this.channel = channel;
         this.controlInterface = controlInterface;
         this.triggers = triggers;
@@ -59,12 +58,12 @@ public class Timeline implements ITimeline, Runnable {
     }
 
     public void stop() {
-        System.out.println("Timeline " + config.getId() + " received stop");
+        System.out.println("Timeline " + timelineId + " received stop");
         running = false;
     }
 
     public void kill() {
-        System.out.println("Timeline " + config.getId() + " received kill");
+        System.out.println("Timeline " + timelineId + " received kill");
         killNow = true;
         running = false;
     }
@@ -140,7 +139,7 @@ public class Timeline implements ITimeline, Runnable {
 
         changeState(TimelineState.RUN);
 
-        System.out.println("Starting timeline " + config.getId());
+        System.out.println("Starting timeline " + timelineId);
 
         // collect the list of channels being altered
         for (Trigger t : triggers) {
