@@ -1,4 +1,4 @@
-package cviz.control.tcp;
+package cviz.control.tcp.message;
 
 import java.io.Serializable;
 import java.util.HashMap;

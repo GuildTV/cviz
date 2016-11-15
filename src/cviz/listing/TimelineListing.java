@@ -52,6 +52,7 @@ public class TimelineListing {
         }
 
         ArrayList<String> fields = Timeline.getParameterNames(triggers);
+        System.out.println("Found " + fields.size() + " fields for " + file.getName());
 
         return new TimelineEntry(file.getName(), fields.toArray(new String[fields.size()]));
     }

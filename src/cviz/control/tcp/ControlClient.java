@@ -5,10 +5,18 @@ import com.google.gson.JsonIOException;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import cviz.TimelineManager;
+import cviz.config.ChannelConfig;
+import cviz.control.tcp.message.ClientAction;
+import cviz.control.tcp.message.InboundCommand;
+import cviz.control.tcp.message.OutboundMessage;
+import cviz.listing.TimelineEntry;
+import cviz.listing.TimelineListing;
 import cviz.state.State;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.channels.Channel;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ControlClient implements Runnable {
@@ -29,7 +37,7 @@ public class ControlClient implements Runnable {
 
         try {
             rawOutputStream = socket.getOutputStream();
-            outputStream =  new JsonWriter(new OutputStreamWriter(rawOutputStream, "UTF-8"));
+            outputStream = new JsonWriter(new OutputStreamWriter(rawOutputStream, "UTF-8"));
             inputStream = new JsonReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
             inputStream.setLenient(true);
         } catch (IOException e) {
@@ -43,15 +51,15 @@ public class ControlClient implements Runnable {
         }
     }
 
-    private void runAction(ClientAction action){
-        switch(action.getType()){
+    private void runAction(ClientAction action) {
+        switch (action.getType()) {
             case KILL:
                 manager.killTimeline(action.getName());
                 break;
 
             case LOAD:
                 String instanceId = action.getTemplateDataId() != null ? action.getTemplateDataId() : "";
-                if(manager.loadTimeline(action.getChannel(), action.getName(), action.getFilename(), instanceId)) {
+                if (manager.loadTimeline(action.getChannel(), action.getName(), action.getFilename(), instanceId)) {
                     manager.startTimeline(action.getName(), action.getTemplateData());
                 }
                 break;
@@ -65,7 +73,7 @@ public class ControlClient implements Runnable {
                 break;
 
             default:
-                System.err.println("Unknown action type: "+action.getType());
+                System.err.println("Unknown action type: " + action.getType());
                 break;
         }
     }
@@ -74,17 +82,26 @@ public class ControlClient implements Runnable {
     public void run() {
         while (isConnected()) {
             try {
-                if(inputStream.hasNext()) {
-                    ClientAction action = gson.fromJson(inputStream, ClientAction.class);
-                    if(action == null || action.getType() == null) {
-                        replyPing();
-                    } else if (action.getType() == ClientAction.ActionType.QUERY) {
-                        System.out.println("Received state query");
-                        sendState(manager.getStateForTimelineId(action.getName()));
-                    } else {
-                        System.out.println("Received action: " + action);
-                        runAction(action);
+                if (inputStream.hasNext()) {
+                    InboundCommand command = gson.fromJson(inputStream, InboundCommand.class);
+
+                    switch (command.getType()) {
+                        case Ping:
+                            replyPing(command.getPing());
+                            break;
+                        case Action:
+                            performAction(command.getAction());
+                            break;
+                        case Timelines:
+                            sendTimelines();
+                            break;
+                        case Channels:
+                            sendChannels();
+                            break;
+                        default:
+                            System.err.println("Got unknown command type from client: " + command.getType());
                     }
+
                 } else {
                     try {
                         Thread.sleep(10);
@@ -98,6 +115,35 @@ public class ControlClient implements Runnable {
                 close();
             }
         }
+    }
+
+    private boolean performAction(ClientAction action) {
+        if (action != null) {
+            if (action.getType() == ClientAction.ActionType.QUERY) {
+                System.out.println("Received state query");
+                sendState(manager.getStateForTimelineId(action.getName()));
+            } else {
+                System.out.println("Received action: " + action);
+                runAction(action);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void sendTimelines() {
+        ArrayList<TimelineEntry> timelines = TimelineListing.ScanDir(new File(TimelineManager.timelinePath));
+        System.out.println("Found " + timelines.size() + " timelines");
+        OutboundMessage msg = OutboundMessage.CreateTimelines(timelines);
+        sendOutbound(msg);
+    }
+
+    private void sendChannels() {
+        ChannelConfig[] channels = manager.getConfig().getChannels();
+
+        System.out.println("Found " + channels.length + " channels");
+        OutboundMessage msg = OutboundMessage.CreateChannels(channels);
+        sendOutbound(msg);
     }
 
     public void close() {
@@ -117,14 +163,22 @@ public class ControlClient implements Runnable {
         if (state == null)
             return true;
 
+        OutboundMessage message = OutboundMessage.CreateState(state);
+        return sendOutbound(message);
+    }
+
+    private boolean sendOutbound(OutboundMessage msg) {
+        if (msg == null)
+            return true;
+
         if (!isConnected())
             return false;
 
         synchronized (outputStream) {
             try {
-                gson.toJson(state, State.class, outputStream);
+                gson.toJson(msg, OutboundMessage.class, outputStream);
                 outputStream.flush();
-            } catch (JsonIOException je){
+            } catch (JsonIOException je) {
                 System.err.println("Failed to send message: " + je.getMessage());
             } catch (Exception ioe) {
                 System.err.println("Failed to send message: " + ioe.getMessage());
@@ -141,29 +195,14 @@ public class ControlClient implements Runnable {
         return true;
     }
 
-    private boolean replyPing() {
+    private boolean replyPing(String msg) {
         if (!isConnected())
             return false;
 
-        Object obj = new Object();
-
         new Thread(() -> {
             synchronized (outputStream) {
-                try {
-                    gson.toJson(obj, Object.class, outputStream);
-                    outputStream.flush();
-                } catch (JsonIOException je){
-                    System.err.println("Failed to send ping: " + je.getMessage());
-                } catch (Exception ioe) {
-                    System.err.println("Failed to send ping: " + ioe.getMessage());
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                        }
-                    }
-                    socket = null;
-                }
+                OutboundMessage message = OutboundMessage.CreatePing(msg);
+                sendOutbound(message);
             }
         }).start();
 

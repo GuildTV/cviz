@@ -33,6 +33,10 @@ public class TimelineManager {
         timelines = new HashMap<String, Timeline>();
     }
 
+    public Config getConfig(){
+        return config;
+    }
+
     public void bindInterface(IControlInterface newInterface) {
         controlInterface = newInterface;
     }
