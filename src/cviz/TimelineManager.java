@@ -3,6 +3,7 @@ package cviz;
 import cviz.config.Config;
 import cviz.config.ChannelConfig;
 import cviz.control.IControlInterface;
+import cviz.state.State;
 import cviz.timeline.Parser;
 import cviz.timeline.Trigger;
 import se.svt.caspar.amcp.AmcpCasparDevice;
@@ -34,11 +35,17 @@ public class TimelineManager {
 
     public void bindInterface(IControlInterface newInterface) {
         controlInterface = newInterface;
-
-        controlInterface.notifyState(TimelineState.CLEAR);
     }
 
-    public synchronized boolean loadTimeline(String channelId, String timelineId, String name) {
+    public synchronized State[] getCompleteState(){
+        return timelines.values().stream().map(t -> t.getState()).toArray(State[]::new);
+    }
+
+    public synchronized State getStateForTimelineId(String timelineId){
+        return timelines.values().stream().map(t -> t.getState()).filter(s -> s.getTimelineId().equals(timelineId)).findFirst().orElse(null);
+    }
+
+    public synchronized boolean loadTimeline(String channelId, String timelineId, String filename, String instanceId) {
         Timeline timeline = timelines.get(timelineId);
         if (timeline != null && timeline.isRunning()) {
             System.err.println("Cannot load timeline " + timelineId + "when one is already running");
@@ -54,20 +61,21 @@ public class TimelineManager {
             return false;
         }
 
-        File file = new File(timelinePath + name + timelineExt);
+        File file = new File(timelinePath + filename + timelineExt);
         if (!file.exists() || !file.isFile()) {
-            System.err.println("Cannot find new timeline file: " + name);
+            System.err.println("Cannot find new timeline file: " + filename);
             return false;
         }
 
         LinkedList<Trigger> sequence = Parser.Parse(file.getAbsolutePath());
         if (sequence == null) {
-            System.err.println("Failed to parse timeline file: " + name);
+            System.err.println("Failed to parse timeline file: " + filename);
             return false;
         }
 
         AmcpChannel channel = new AmcpChannel(host, channelConfig.getChannel());
-        timelines.put(timelineId, new Timeline(timelineId, channel, controlInterface, sequence));
+        State state = new State(controlInterface, timelineId, filename, instanceId);
+        timelines.put(timelineId, new Timeline(timelineId, channel, state, sequence));
 
         System.out.println("Timeline " + timelineId + "ready");
 

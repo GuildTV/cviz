@@ -1,6 +1,6 @@
 package cviz;
 
-import cviz.control.IControlInterface;
+import cviz.state.State;
 import cviz.timeline.Trigger;
 import cviz.timeline.TriggerType;
 import cviz.timeline.commands.ClearCommand;
@@ -15,34 +15,29 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Timeline implements ITimeline, Runnable {
     private final String timelineId;
     private final AmcpChannel channel;
-    private final LinkedList<Trigger> triggers;
+    private final LinkedList<Trigger> remainingTriggers;
     private final CopyOnWriteArrayList<Trigger> activeTriggers = new CopyOnWriteArrayList<>();
     private final ConcurrentHashMap<Integer, LayerState> currentLayerState = new ConcurrentHashMap<>();
     private final Set<Integer> usedLayers = new HashSet<>();
     private final HashMap<Integer, AmcpLayer> layerCache = new HashMap<>();
 
-    private final IControlInterface controlInterface;
+    private final State state;
 
     private HashMap<String, String> parameters;
     private boolean running = false;
     private boolean killNow = false;
 
-    public Timeline(String timelineId, AmcpChannel channel, IControlInterface controlInterface, LinkedList<Trigger> triggers) {
+    public Timeline(String timelineId, AmcpChannel channel, State state, LinkedList<Trigger> triggers) {
         this.timelineId = timelineId;
         this.channel = channel;
-        this.controlInterface = controlInterface;
-        this.triggers = triggers;
+        this.state = state;
+        this.remainingTriggers = triggers;
 
-        changeState(TimelineState.READY);
+        state.setState(TimelineState.READY);
     }
 
     public int getChannelNumber(){
         return channel.channelId();
-    }
-
-    private void changeState(TimelineState newState) {
-        if (controlInterface != null)
-            controlInterface.notifyState(newState);
     }
 
     @Override
@@ -78,6 +73,10 @@ public class Timeline implements ITimeline, Runnable {
         return currentLayerState.get(layerId);
     }
 
+    public State getState() {
+        return state;
+    }
+
     @Override
     public CopyOnWriteArrayList<Trigger> getActiveTriggers() {
         return activeTriggers;
@@ -92,10 +91,10 @@ public class Timeline implements ITimeline, Runnable {
     }
 
     private boolean areRequiredParametersDefined() {
-        ArrayList<String> fields = getParameterNames(triggers);
+        ArrayList<String> fields = getParameterNames(remainingTriggers);
         for (String fieldName : fields) {
             if (fieldName.indexOf("@") == 0 && !parameters.containsKey(fieldName.substring(1))) {
-                changeState(TimelineState.ERROR);
+                state.setState(TimelineState.ERROR, "Missing required parameter: " + fieldName);
                 return false;
             }
         }
@@ -119,14 +118,14 @@ public class Timeline implements ITimeline, Runnable {
         if (running) return;
         running = true;
 
-        // check all template datasets are defined
+        // check all required parameters are defined
         if (!areRequiredParametersDefined()) {
             running = false;
             return;
         }
 
         // run any setup triggers
-        long setupTriggerCount = triggers.stream().filter(t -> t.getType() == TriggerType.SETUP).count();
+        long setupTriggerCount = remainingTriggers.stream().filter(t -> t.getType() == TriggerType.SETUP).count();
         if (setupTriggerCount > 1){
             System.out.println("Timeline can only have one setup trigger");
             running = false;
@@ -134,15 +133,15 @@ public class Timeline implements ITimeline, Runnable {
         }
 
         Trigger setupTrigger = null;
-        if (triggers.peekFirst().getType() == TriggerType.SETUP)
-            setupTrigger = triggers.pop();
+        if (remainingTriggers.peekFirst().getType() == TriggerType.SETUP)
+            setupTrigger = remainingTriggers.pop();
 
-        changeState(TimelineState.RUN);
+        state.setState(TimelineState.RUN);
 
         System.out.println("Starting timeline " + timelineId);
 
-        // collect the list of channels being altered
-        for (Trigger t : triggers) {
+        // collect the list of layers being altered
+        for (Trigger t : remainingTriggers) {
             for (ICommand c : t.getCommands()) {
                 usedLayers.add(c.getLayerId());
             }
@@ -159,14 +158,14 @@ public class Timeline implements ITimeline, Runnable {
 
         while (running) {
             synchronized (this) {
-                if (triggers.isEmpty() && activeTriggers.isEmpty())
+                if (remainingTriggers.isEmpty() && activeTriggers.isEmpty())
                     break;
             }
 
             if (isWaitingForCue())
-                changeState(TimelineState.CUE);
+                state.setState(TimelineState.CUE, "TODO - cue name");
             else
-                changeState(TimelineState.RUN);
+                state.setState(TimelineState.RUN);
 
             // wait until the timeline has been finished
             try {
@@ -178,8 +177,8 @@ public class Timeline implements ITimeline, Runnable {
 
         // if kill command has been sent, then wipe everything
         if (killNow) {
-            changeState(TimelineState.ERROR);
-            triggers.clear();
+            state.setState(TimelineState.ERROR, "Killed");
+            remainingTriggers.clear();
             activeTriggers.clear();
         }
 
@@ -188,7 +187,7 @@ public class Timeline implements ITimeline, Runnable {
 
         System.out.println("Finished running timeline");
         running = false;
-        changeState(TimelineState.CLEAR);
+        state.setState(TimelineState.CLEAR);
     }
 
     private void clearAllUserLayers() {
@@ -202,8 +201,8 @@ public class Timeline implements ITimeline, Runnable {
     private boolean promoteTriggersToActive() {
         int moved = 0;
 
-        while (!triggers.isEmpty()) {
-            Trigger t = triggers.pop();
+        while (!remainingTriggers.isEmpty()) {
+            Trigger t = remainingTriggers.pop();
             moved++;
 
             activeTriggers.add(t);
@@ -224,7 +223,7 @@ public class Timeline implements ITimeline, Runnable {
         System.out.println("Received a cue");
         // TODO - maybe this should be buffered, otherwise there could be some timing issues
 
-        changeState(TimelineState.RUN);
+        state.setState(TimelineState.RUN);
 
         // find trigger to cue
         Optional<Trigger> waiting = activeTriggers.stream().filter(t -> t.getType() == TriggerType.CUE).findFirst();
@@ -284,7 +283,7 @@ public class Timeline implements ITimeline, Runnable {
 
     private void executeTrigger(Trigger trigger) {
         // TODO - may want to look into using a thread to do the sending/commands, as they block until they get a response
-        // may cause issues with integrity of triggers lists though
+        // may cause issues with integrity of remainingTriggers lists though
         trigger.getCommands().forEach(c -> c.execute(this));
         activeTriggers.remove(trigger);
     }
