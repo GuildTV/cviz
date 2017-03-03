@@ -28,7 +28,8 @@ public class CgAddCommand extends ICommand {
             if(templateData == null)
                 templateData = templateField;
 
-            templateData = templateData.replace("\"", "\\\"");
+            templateData = templateData.replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
+            templateData = templateData.replace("\"", "\\\""); // " => \"
 
             layer.sendCommand("CG", "ADD 1 \"" + templateName + "\" 0 \"" + templateData + "\"");
 
