@@ -18,8 +18,8 @@ public class Trigger {
 	public static Trigger CreateCue(){
 		return new Trigger(TriggerType.CUE, -1, -1, false);
 	}
-	public static Trigger CreateImmediate(){
-		return new Trigger(TriggerType.IMMEDIATE, -1, -1, false);
+	public static Trigger CreateSetup(){
+		return new Trigger(TriggerType.SETUP, -1, -1, false);
 	}
 	public static Trigger CreateFrame(int layerId, long targetFrame){
 		return new Trigger(TriggerType.FRAME, layerId, targetFrame, false);

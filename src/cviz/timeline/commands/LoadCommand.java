@@ -2,33 +2,26 @@ package cviz.timeline.commands;
 
 import cviz.ITimeline;
 import cviz.LayerState;
-import se.svt.caspar.amcp.AmcpLayer;
-import se.svt.caspar.producer.Video;
 
-public class LoadCommand extends ICommand {
+public class LoadCommand extends AmcpCommand {
     private String filename;
 
-    public LoadCommand(int layerId, String filename) {
-        super(layerId);
+    public LoadCommand(int layerId, String command, String filename) {
+        super(layerId, command);
         this.filename = filename;
     }
 
     @Override
     public boolean execute(ITimeline timeline) {
-        AmcpLayer layer = timeline.getLayer(getLayerId());
-
-        try {
-            layer.loadBg(new Video(filename));
-            timeline.setLayerState(getLayerId(), new LayerState(filename));
-            return true;
-        } catch (Exception e){
-            System.err.println("Failed to execute command: " + e.getMessage());
+        if (!super.execute(timeline))
             return false;
-        }
+
+        timeline.setLayerState(getLayerId(), new LayerState(filename));
+        return true;
     }
 
     @Override
-    public String toString() {
-        return "LoadCommand: " + getLayerId() + " " + filename;
+    public String getCommandName(){
+        return "LoadCommand";
     }
 }

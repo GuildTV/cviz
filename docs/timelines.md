@@ -1,7 +1,7 @@
 # Timeline syntax
 An example which loads a video and plays it when cued is as follows.
 ```
-# load immediately
+# run setup
 @ {
   100 LOAD GE2015/BG_START
 }
@@ -22,8 +22,9 @@ Important: blank lines are not supported by the parser
 Timeline files are built with triggers, containing commands. There are a few types of triggers, to allow for automated flow with some manual control.
 
 
-### Immediate
-These are run immediately when they are next on the trigger stack. They are commonly only used at the beginning of a timeline to do some setup, or start playing.
+### Setup
+There can be only one setup trigger, which must be located at the beginning of the file (if present).
+It is run immediately when the timeline is loaded, and should be used to perform some initial setup.
 
 ```
 @ {

@@ -9,7 +9,7 @@ import cviz.control.tcp.TCPControlInterface;
 public class CasparViz {
 
 	public static void main(String[] args) throws InterruptedException, SocketException {
-        System.out.println("Caspar-viz v0.1 running");
+        System.out.println("Caspar-viz v0.3 running");
 
 		TimelineManager manager = new TimelineManager();
 

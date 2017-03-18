@@ -113,6 +113,18 @@ public class Timeline implements ITimeline, Runnable {
             return;
         }
 
+        // run any setup triggers
+        long setupTriggerCount = triggers.stream().filter(t -> t.getType() == TriggerType.SETUP).count();
+        if (setupTriggerCount > 1){
+            System.out.println("Timeline can only have one setup trigger");
+            running = false;
+            return;
+        }
+
+        Trigger setupTrigger = null;
+        if (triggers.peekFirst().getType() == TriggerType.SETUP)
+            setupTrigger = triggers.pop();
+
         changeState(TimelineState.RUN);
 
         System.out.println("Starting timeline");
@@ -129,8 +141,9 @@ public class Timeline implements ITimeline, Runnable {
         // set some triggers as active
         promoteTriggersToActive();
 
-        // run any immediate triggers
-        triggerOnVideoFrame(-1, 0, 100);
+        // Run the setup
+        if (setupTrigger != null)
+            executeTrigger(setupTrigger);
 
         while(running){
             synchronized(this) {
@@ -221,10 +234,8 @@ public class Timeline implements ITimeline, Runnable {
         if(!running) return;
 
         for(Trigger t: activeTriggers){
-            if(t.getType() == TriggerType.IMMEDIATE){
-                executeTrigger(t);
+            if (t.getType() == TriggerType.SETUP)
                 continue;
-            }
 
             if(t.getLayerId() != layer)
                 continue;

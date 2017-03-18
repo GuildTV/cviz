@@ -57,7 +57,7 @@ public class Parser {
     }
 
 
-    private void ParseTrigger(String line){
+    private void ParseTrigger(String line) throws Exception {
         Matcher matcher;
         String qualifier;
 
@@ -65,20 +65,24 @@ public class Parser {
         if(matcher.find()) {
             qualifier = matcher.group();
 
-            if(qualifier.equals("END")) {
-                matcher.find();
-                currentTrigger = Trigger.CreateEnd(Short.parseShort(matcher.group()));
-            }
-            else if(qualifier.equals("Q")) {
-                currentTrigger = Trigger.CreateCue();
-            }
-            else {
-                matcher.find();
-                currentTrigger = Trigger.CreateFrame(Short.parseShort(matcher.group()), Long.parseLong(qualifier));
+            switch (qualifier) {
+                case "END":
+                    if (!matcher.find())
+                        throw new Exception("Failed to match after end trigger");
+                    currentTrigger = Trigger.CreateEnd(Short.parseShort(matcher.group()));
+                    break;
+                case "Q":
+                    currentTrigger = Trigger.CreateCue();
+                    break;
+                default:
+                    if (!matcher.find())
+                        throw new Exception("Failed to match after frame trigger");
+                    currentTrigger = Trigger.CreateFrame(Short.parseShort(matcher.group()), Long.parseLong(qualifier));
+                    break;
             }
         }
         else {
-            currentTrigger = Trigger.CreateImmediate();
+            currentTrigger = Trigger.CreateSetup();
         }
     }
 
@@ -117,38 +121,21 @@ public class Parser {
 
     private static ICommand parseCommands(String[] parts) throws Exception {
         short layerId = Short.parseShort(parts[0]);
+        String command = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
 
         switch(parts[1]) {
-            case "PLAY":
-                return new PlayCommand(layerId);
-            case "LOAD":
-                return new LoadCommand(layerId, parts[2]);
+            case "LOADBG":
+                return new LoadCommand(layerId, command, parts[2]);
             case "STOP":
-                return new StopCommand(layerId);
+                return new StopCommand(layerId, command);
             case "LOOP":
                 return new LoopCommand(layerId);
-            case "PAUSE":
-                return new PauseCommand(layerId);
-            case "RESUME":
-                return new ResumeCommand(layerId);
             case "CLEAR":
                 return new ClearCommand(layerId);
             case "CGADD":
                 return new CgAddCommand(layerId, parts[2], parts[3]);
-            case "CGNEXT":
-                return new CgNextCommand(layerId);
-            case "CGPLAY":
-                return new CgPlayCommand(layerId);
-            case "CGREMOVE":
-                return new CgRemoveCommand(layerId);
-            case "CGSTOP":
-                return new CgStopCommand(layerId);
-            case "TRANSFORM":
-                return new TransformCommand(layerId, Arrays.copyOfRange(parts, 2, parts.length));
-            case "OPACITY":
-                return new OpacityCommand(layerId, Arrays.copyOfRange(parts, 2, parts.length));
+            default:
+                return new AmcpCommand(layerId, command);
         }
-        System.err.println("Bad command type " + parts[1]);
-        throw new Exception("Unknown command type");
     }
 }

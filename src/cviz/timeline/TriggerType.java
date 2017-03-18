@@ -1,7 +1,7 @@
 package cviz.timeline;
 
 public enum TriggerType {
-    IMMEDIATE,
+    SETUP,
     FRAME,
     END,
     CUE
