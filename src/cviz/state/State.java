@@ -8,16 +8,16 @@ import java.io.Serializable;
 public class State implements Serializable{
     private transient final IControlInterface controlInterface;
 
-    private final String timelineId;
-    private final String filename;
+    private final String timelineSlot;
+    private final String timelineFile;
     private final String instanceName;
     private TimelineState state;
     private String stateMessage;
 
-    public State(IControlInterface controlInterface, String timelineId, String filename, String instanceName){
+    public State(IControlInterface controlInterface, String timelineSlot, String timelineFile, String instanceName){
         this.controlInterface = controlInterface;
-        this.timelineId = timelineId;
-        this.filename = filename;
+        this.timelineSlot = timelineSlot;
+        this.timelineFile = timelineFile;
 
         this.instanceName = instanceName;
 
@@ -35,12 +35,12 @@ public class State implements Serializable{
         controlInterface.notifyState(this);
     }
 
-    public String getTimelineId() {
-        return timelineId;
+    public String getTimelineSlot() {
+        return timelineSlot;
     }
 
-    public String getFilename() {
-        return filename;
+    public String getTimelineFile() {
+        return timelineFile;
     }
 
     public String getInstanceName() {

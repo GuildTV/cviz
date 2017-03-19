@@ -41,8 +41,8 @@ public class TimelineManager {
         return timelines.values().stream().map(t -> t.getState()).toArray(State[]::new);
     }
 
-    public synchronized State getStateForTimelineId(String timelineId){
-        return timelines.values().stream().map(t -> t.getState()).filter(s -> s.getTimelineId().equals(timelineId)).findFirst().orElse(null);
+    public synchronized State getStateForTimelineSlot(String timelineSlot){
+        return timelines.values().stream().map(t -> t.getState()).filter(s -> s.getTimelineSlot().equals(timelineSlot)).findFirst().orElse(null);
     }
 
     public synchronized boolean loadTimeline(String channelId, String timelineId, String filename, String instanceId) {

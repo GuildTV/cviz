@@ -50,9 +50,9 @@ public class ControlClient implements Runnable {
                 break;
 
             case LOAD:
-                String instanceId = action.getTemplateDataId() != null ? action.getTemplateDataId() : "";
-                if(manager.loadTimeline(action.getChannel(), action.getName(), action.getFilename(), instanceId)) {
-                    manager.startTimeline(action.getName(), action.getTemplateData());
+                String instanceId = action.getInstanceId() != null ? action.getInstanceId() : "";
+                if(manager.loadTimeline(action.getChannel(), action.getName(), action.getTimelineFile(), instanceId)) {
+                    manager.startTimeline(action.getName(), action.getParameters());
                 }
                 break;
 
@@ -80,7 +80,7 @@ public class ControlClient implements Runnable {
                         replyPing();
                     } else if (action.getType() == ClientAction.ActionType.QUERY) {
                         System.out.println("Received state query");
-                        sendState(manager.getStateForTimelineId(action.getName()));
+                        sendState(manager.getStateForTimelineSlot(action.getName()));
                     } else {
                         System.out.println("Received action: " + action);
                         runAction(action);

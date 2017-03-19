@@ -9,9 +9,9 @@ Actions take on the following json structure.
 ```
 {
   "type": "", // Command type
-  "filename": "", // Template name
-  "templateDataId": "", // Name for the data to use when sending state back to clients
-  "templateData": {} // Data available to pass to templates
+  "timelineFile": "", // Template name
+  "instanceName": "", // Name for the data to use when sending state back to clients
+  "parameters": {} // Data available to pass to templates
 }
 ```
 
@@ -21,9 +21,9 @@ This action loads a template and starts running it.
 ```
 {
   "type": "LOAD",
-  "filename": "lowerthird2",
-  "templateDataId": "bob kelso",
-  "templateData": {
+  "timelineFile": "lowerthird2",
+  "instanceName": "bob kelso",
+  "parameters": {
     "data": {
       "f0": "Bob Kelso",
       "f1": "Chief of Medicine"
@@ -38,9 +38,9 @@ This action requires no data parameters, and is used to run a cue trigger in the
 ```
 {
   "type": "CUE",
-  "filename": "",
-  "templateDataId": "",
-  "templateData": {}
+  "timelineFile": "",
+  "instanceName": "",
+  "parameters": {}
 }
 ```
 
@@ -50,23 +50,25 @@ This action requires no data parameters, and is used to abort a template
 ```
 {
   "type": "KILL",
-  "filename": "",
-  "templateDataId": "",
-  "templateData": {}
+  "timelineFile": "",
+  "instanceName": "",
+  "parameters": {}
 }
 ```
 
-## Events
+## State
 These are send to all connected clients.
 
 ### Error
-This is fired when a timeline load is failed, caused by a data id being used that was not defined in the templateData set passed in the action to run the timeline.
+This is sent whilst a timeline load is failed, caused by a data id being used that was not defined in the parameters set passed in the action to run the timeline.
 
 ```
 {
   "state": "ERROR",
-  "templateName": "",
-  "dataId": ""
+  "stateMessage": "An unknown error occured",
+  "timelineSlot": "default",
+  "timelineFile": "",
+  "instanceName": ""
 }
 ```
 
@@ -76,40 +78,49 @@ This is fired once a timeline has been loaded, before it starts running.
 ```
 {
   "state": "READY",
-  "templateName": "lowerthird2",
-  "dataId": "bob kelso"
+  "stateMessage": "",
+  "timelineSlot": "default",
+  "timelineFile": "lowerthird2",
+  "instanceName": "bob kelso"
 }
 ```
 
 ### Cue
-This is fired when a timeline is waiting to be cued by a client.
+This is sent whilst a timeline is waiting to be cued by a client.
 
 ```
 {
   "state": "CUE",
-  "templateName": "lowerthird2",
-  "dataId": "bob kelso"
+  "stateMessage": "start running",
+  "timelineSlot": "default",
+  "timelineFile": "lowerthird2",
+  "instanceName": "bob kelso"
 }
 ```
 
 ### Run
-This is fired when the timeline is running.
+This is sent whilst the timeline is running.
 
 ```
 {
-  "state": "RUN",
-  "templateName": "lowerthird2",
-  "dataId": "bob kelso"
+  "state": "CUE",
+  "stateMessage": "",
+  "timelineSlot": "default",
+  "timelineFile": "lowerthird2",
+  "instanceName": "bob kelso"
 }
 ```
 
 ### Clear
-Fired once a timeline has finished running, to indicate the system is ready for a new timeline to be loaded
+Sent after a timeline has finished running, to indicate the system is ready for a new timeline to be loaded
+Note that the timelineSFile and instanceName fields are still defined, to indicate the timeline that has finished running.
 
 ```
 {
-  "state": "CLEAER",
-  "templateName": "",
-  "dataId": ""
+  "state": "CUE",
+  "stateMessage": "",
+  "timelineSlot": "default",
+  "timelineFile": "lowerthird2",
+  "instanceName": "bob kelso"
 }
 ```

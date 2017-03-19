@@ -16,17 +16,17 @@ public class ClientAction implements Serializable {
     private String channel;
     private String name;
     private ActionType type;
-    private String filename;
-    private String templateDataId;
-    private HashMap<String, String> templateData;
+    private String timelineFile;
+    private String instanceName;
+    private HashMap<String, String> parameters;
 
-    public ClientAction(String channel, String name, ActionType type, String filename, String templateDataId, HashMap<String, String> templateData) {
+    public ClientAction(String channel, String name, ActionType type, String timelineFile, String instanceName, HashMap<String, String> parameters) {
         this.channel = channel;
         this.name = name;
         this.type = type;
-        this.filename = filename;
-        this.templateDataId = templateDataId;
-        this.templateData = templateData;
+        this.timelineFile = timelineFile;
+        this.instanceName = instanceName;
+        this.parameters = parameters;
     }
 
     public String getChannel() {
@@ -46,19 +46,19 @@ public class ClientAction implements Serializable {
         return type;
     }
 
-    public String getFilename() {
-        return filename;
+    public String getTimelineFile() {
+        return timelineFile;
     }
 
-    public String getTemplateDataId() {
-        return templateDataId;
+    public String getInstanceId() {
+        return instanceName;
     }
 
-    public HashMap<String, String> getTemplateData() {
-        return templateData;
+    public HashMap<String, String> getParameters() {
+        return parameters;
     }
 
     public String toString() {
-        return "Action: " + type + " " + filename + " data: " + templateDataId + " " + (templateData != null ? templateData.size() : "-");
+        return "Action: " + type + " " + timelineFile + " data: " + instanceName + " " + (parameters != null ? parameters.size() : "-");
     }
 }
