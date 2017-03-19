@@ -23,7 +23,7 @@ public class Timeline implements ITimeline, Runnable {
 
     private final State state;
 
-    private HashMap<String, String> parameters;
+    private HashMap<String, String> parameterValues;
     private boolean running = false;
     private boolean killNow = false;
 
@@ -42,14 +42,7 @@ public class Timeline implements ITimeline, Runnable {
 
     @Override
     public AmcpLayer getLayer(int layerId) {
-        AmcpLayer layer = layerCache.get(layerId);
-
-        if (layer == null) {
-            layer = new AmcpLayer(channel, layerId);
-            layerCache.put(layerId, layer);
-        }
-
-        return layer;
+        return layerCache.computeIfAbsent(layerId, k -> new AmcpLayer(channel, layerId));
     }
 
     public void kill() {
@@ -95,7 +88,7 @@ public class Timeline implements ITimeline, Runnable {
     private boolean areRequiredParametersDefined() {
         HashSet<String> fields = getParameterNames(remainingTriggers);
         for (String fieldName : fields) {
-            if (fieldName.indexOf("@") == 0 && !parameters.containsKey(fieldName.substring(1))) {
+            if (fieldName.indexOf("@") == 0 && !parameterValues.containsKey(fieldName.substring(1))) {
                 state.setState(TimelineState.ERROR, "Missing required parameter: " + fieldName);
                 return false;
             }
@@ -230,7 +223,7 @@ public class Timeline implements ITimeline, Runnable {
 
         // find trigger to cue
         Optional<Trigger> waiting = getCueTrigger();
-        if (waiting == null) {
+        if (!waiting.isPresent()) {
             System.err.println("Received a cue without a trigger to fire");
             return;
         }
@@ -244,7 +237,7 @@ public class Timeline implements ITimeline, Runnable {
         }
     }
 
-    public synchronized void triggerOnVideoFrame(int layer, long frame, long totalFrames) {
+    synchronized void triggerOnVideoFrame(int layer, long frame, long totalFrames) {
         if (!running) return;
 
         for (Trigger t: activeTriggers) {
@@ -266,7 +259,7 @@ public class Timeline implements ITimeline, Runnable {
             }
             // TODO - this check needs to ensure that an appropriate amount of time has passed
             // NOTE: this also gets hit if the source video is a different framerate to the channel
-            else if (state.getPreviousFrame() == frame && targetFrame > frame) {
+            else if (state.getLastFrame() == frame && targetFrame > frame) {
                 // the video didn't play to the end for some reason, move on
                 System.err.println("Loop didn't reach the end, check your video!");
 
@@ -280,7 +273,7 @@ public class Timeline implements ITimeline, Runnable {
         }
 
         if (currentLayerState.containsKey(layer)) {
-            currentLayerState.get(layer).setPreviousFrame(frame);
+            currentLayerState.get(layer).setLastFrame(frame);
         }
     }
 
@@ -291,14 +284,17 @@ public class Timeline implements ITimeline, Runnable {
         activeTriggers.remove(trigger);
     }
 
-    public String getParameter(String fieldName) {
-        if (fieldName.indexOf("@") == 0)
-            return parameters.get(fieldName.substring(1));
+    public String getParameterValue(String name) {
+        if (name.indexOf("@") == 0)
+            return parameterValues.get(name.substring(1));
 
-        return fieldName;
+        return name;
     }
 
-    public void setParameters(HashMap<String, String> parameters) {
-        this.parameters = parameters != null ? parameters : new HashMap<>();
+    void setParameterValues(HashMap<String, String> parameterValues) {
+        if (this.parameterValues != null)
+            return;
+
+        this.parameterValues = parameterValues != null ? parameterValues : new HashMap<>();
     }
 }

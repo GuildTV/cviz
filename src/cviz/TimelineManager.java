@@ -30,7 +30,7 @@ public class TimelineManager {
         new Thread(oscWrapper).start();
 
         host = new AmcpCasparDevice(config.getCasparHost(), config.getCasparPort());
-        timelines = new HashMap<String, Timeline>();
+        timelines = new HashMap<>();
     }
 
     public void bindInterface(IControlInterface newInterface) {
@@ -38,11 +38,11 @@ public class TimelineManager {
     }
 
     public synchronized State[] getCompleteState(){
-        return timelines.values().stream().map(t -> t.getState()).toArray(State[]::new);
+        return timelines.values().stream().map(Timeline::getState).toArray(State[]::new);
     }
 
     public synchronized State getStateForTimelineSlot(String timelineSlot){
-        return timelines.values().stream().map(t -> t.getState()).filter(s -> s.getTimelineSlot().equals(timelineSlot)).findFirst().orElse(null);
+        return timelines.values().stream().map(Timeline::getState).filter(s -> s.getTimelineSlot().equals(timelineSlot)).findFirst().orElse(null);
     }
 
     public synchronized boolean loadTimeline(String channelId, String timelineSlot, String filename, String instanceId) {
@@ -90,7 +90,7 @@ public class TimelineManager {
         if (timeline.isRunning())
             return false;
 
-        timeline.setParameters(parameters);
+        timeline.setParameterValues(parameters);
 
         new Thread(timeline).start();
         return true;
@@ -110,7 +110,7 @@ public class TimelineManager {
         timeline.triggerCue();
     }
 
-    public synchronized void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames) {
+    synchronized void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames) {
         if (timelines == null)
             return;
 

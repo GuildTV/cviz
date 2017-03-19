@@ -10,11 +10,11 @@ import cviz.control.IControlInterface;
 import cviz.control.tcp.TCPControlInterface;
 
 public class CasparViz {
-    public static final int VersionMajor = 0;
-    public static final int VersionMinor = 3;
-    public static final int VersionHotfix = 0;
+    private static final int VersionMajor = 0;
+    private static final int VersionMinor = 3;
+    private static final int VersionHotfix = 0;
 
-    public static String GetVersion() {
+    private static String GetVersion() {
         return "v" + VersionMajor + "." + VersionMinor + "." + VersionHotfix;
     }
 

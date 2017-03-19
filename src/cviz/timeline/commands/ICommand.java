@@ -5,7 +5,7 @@ import cviz.ITimeline;
 public abstract class ICommand {
     private final int layerId;
 
-    protected ICommand(int layerId){
+    ICommand(int layerId){
         this.layerId = layerId;
     }
 

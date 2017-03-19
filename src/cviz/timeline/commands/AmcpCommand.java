@@ -3,11 +3,6 @@ package cviz.timeline.commands;
 import cviz.ITimeline;
 import se.svt.caspar.amcp.AmcpLayer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 public class AmcpCommand extends ICommand {
     private String command;
 
@@ -28,7 +23,7 @@ public class AmcpCommand extends ICommand {
 
         StringBuilder translatedParameters = new StringBuilder();
         for (String param: parameters.split(" ")) {
-            param = timeline.getParameter(param);
+            param = timeline.getParameterValue(param);
 
             param = param.replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
             param = param.replace("\"", "\\\""); // " => \"

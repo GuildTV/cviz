@@ -5,26 +5,26 @@ package cviz;
  */
 public class LayerState {
 	private final String videoName;
-	private long previousFrame;
+	private long lastFrame;
 	
 	public LayerState(String videoName) {
 		this.videoName = videoName;
-		previousFrame = 0;
+		lastFrame = 0;
 	}
 
 	public String getVideoName() {
 		return videoName;
 	}
 	
-	public long getPreviousFrame() {
-		return previousFrame;
+	public long getLastFrame() {
+		return lastFrame;
 	}
 	
-	public void setPreviousFrame(long lastFrame) {
-		this.previousFrame = lastFrame;
+	void setLastFrame(long lastFrame) {
+		this.lastFrame = lastFrame;
 	}
 
 	public String toString() {
-		return "LayerState: " + videoName + " " + previousFrame;
+		return "LayerState: " + videoName + " " + lastFrame;
 	}
 }

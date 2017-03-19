@@ -13,5 +13,5 @@ public interface ITimeline {
 
     CopyOnWriteArrayList<Trigger> getActiveTriggers();
 
-    String getParameter(String fieldName);
+    String getParameterValue(String fieldName);
 }

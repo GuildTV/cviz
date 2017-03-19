@@ -23,7 +23,7 @@ public class LoadCommand extends AmcpCommand {
         if (!super.execute(timeline))
             return false;
 
-        String resolvedFilename = timeline.getParameter(filename);
+        String resolvedFilename = timeline.getParameterValue(filename);
         if (resolvedFilename == null)
             resolvedFilename = filename;
 

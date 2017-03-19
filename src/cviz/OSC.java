@@ -8,10 +8,10 @@ import com.illposed.osc.OSCMessage;
 import com.illposed.osc.OSCPortIn;
 
 public class OSC implements Runnable {
+	private static final Pattern pattern = Pattern.compile("/channel/([0-9]+)/stage/layer/([0-9]+)/file/frame");
+
     private final TimelineManager manager;
     private final int oscPort;
-
-	private Pattern pattern = Pattern.compile("/channel/([0-9]+)/stage/layer/([0-9]+)/file/frame");
 
 	public OSC(TimelineManager manager, int oscPort) {
         this.oscPort = oscPort;

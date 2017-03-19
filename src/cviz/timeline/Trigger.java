@@ -42,7 +42,7 @@ public class Trigger {
 		this.loop = loop;
 	}
 	
-	protected void addCommand(ICommand c) {
+	void addCommand(ICommand c) {
 		commands.add(c);
 	}
 
