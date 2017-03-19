@@ -5,19 +5,27 @@ import cviz.timeline.commands.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Parser {
 
-	private LinkedList<Trigger> commands = new LinkedList<>();
+    private static final Pattern setupTriggerPattern = Pattern.compile("^@ \\{$");
+    private static final Pattern cueTriggerPattern = Pattern.compile("^@Q (.*) \\{$");
+    private static final Pattern endTriggerPattern = Pattern.compile("^@END ([0-9]+) \\{$");
+    private static final Pattern frameTriggerPattern = Pattern.compile("^@([0-9]+) ([0-9]+) \\{$");
 
-    Trigger currentTrigger = null;
+    private static final Pattern loadCommandPattern = Pattern.compile("^(LOAD|LOADBG) ([\"].+?[\"]|[^ ]+)");
+    private static final Pattern stopCommandPattern = Pattern.compile("^STOP");
+    private static final Pattern loopCommandPattern = Pattern.compile("^LOOP");
+    private static final Pattern clearCommandPattern = Pattern.compile("^CLEAR");
 
-    private Pattern pattern = Pattern.compile("([A-Z0-9]+)+");
-	private BufferedReader reader;
+	private LinkedList<Trigger> triggers = new LinkedList<>();
+
+    private Trigger currentTrigger = null;
+
+	private final BufferedReader reader;
 
 	private Parser(BufferedReader reader){
 		this.reader = reader;
@@ -31,77 +39,96 @@ public class Parser {
                 ParseLine(line);
             }
         } catch (IOException e){
-            commands = null;
+            triggers = null;
         } catch (Exception e) {
             e.printStackTrace();
-            commands = null;
+            triggers = null;
         }
     }
 
     private void ParseLine(String line) throws Exception {
+        line = line.trim();
+
         if(line.startsWith("@")) {
             // trigger line
-            ParseTrigger(line);
+            currentTrigger = ParseTrigger(line);
+            if (currentTrigger == null)
+                throw new Exception("Failed to parse trigger: " + line);
         }
         else if(line.startsWith("}")) {
-            commands.add(currentTrigger);
+            triggers.add(currentTrigger);
             currentTrigger = null;
         }
-        else if(line.startsWith("#")) {
-            // comment
+        else if(line.startsWith("#") || line.length() == 0) {
+            // comment or blank line
         }
         else {
-            String[] parts = line.trim().split(" ");
-            currentTrigger.addCommand(parseCommands(parts));
+            if (currentTrigger == null)
+                throw new Exception("Failed to add command outside of trigger: " + line);
+
+            currentTrigger.addCommand(ParseCommand(line));
         }
     }
 
+    private static Trigger ParseTrigger(String line) {
+        Matcher matcher = setupTriggerPattern.matcher(line);
+        if (matcher.find())
+            return Trigger.CreateSetup();
 
-    private void ParseTrigger(String line) throws Exception {
-        Matcher matcher;
-        String qualifier;
+        matcher = cueTriggerPattern.matcher(line);
+        if (matcher.find())
+            return Trigger.CreateCue(matcher.group(1));
 
-        matcher = pattern.matcher(line);
-        if(matcher.find()) {
-            qualifier = matcher.group();
+        matcher = endTriggerPattern.matcher(line);
+        if (matcher.find())
+            return  Trigger.CreateEnd(Short.parseShort(matcher.group(1)));
 
-            switch (qualifier) {
-                case "END":
-                    if (!matcher.find())
-                        throw new Exception("Failed to match after end trigger");
-                    currentTrigger = Trigger.CreateEnd(Short.parseShort(matcher.group()));
-                    break;
-                case "Q":
-                    currentTrigger = Trigger.CreateCue();
-                    break;
-                default:
-                    if (!matcher.find())
-                        throw new Exception("Failed to match after frame trigger");
-                    currentTrigger = Trigger.CreateFrame(Short.parseShort(matcher.group()), Long.parseLong(qualifier));
-                    break;
-            }
-        }
-        else {
-            currentTrigger = Trigger.CreateSetup();
-        }
+        matcher = frameTriggerPattern.matcher(line);
+        if (matcher.find())
+            return  Trigger.CreateFrame(Short.parseShort(matcher.group(2)), Long.parseLong(matcher.group(1)));
+
+        return null;
     }
 
+    private static ICommand ParseCommand(String line) throws Exception {
+        String[] parts = line.split(" ", 2);
+        short layerId = Short.parseShort(parts[0]);
+        String command = parts[1];
 
-	public static LinkedList<Trigger> Parse(String path) {
+        Matcher matcher = loadCommandPattern.matcher(command);
+        if (matcher.find())
+            return new LoadCommand(layerId, command, matcher.group(2));
+
+        matcher = stopCommandPattern.matcher(command);
+        if (matcher.find())
+            return new StopCommand(layerId, command);
+
+        matcher = loopCommandPattern.matcher(command);
+        if (matcher.find())
+            return new LoopCommand(layerId);
+
+        matcher = clearCommandPattern.matcher(command);
+        if (matcher.find())
+            return new ClearCommand(layerId);
+
+        return new AmcpCommand(layerId, command);
+    }
+
+    public static LinkedList<Trigger> ParseFile(String path) {
         LinkedList<Trigger> commands = null;
 
-		FileReader fr = null;
+        FileReader fr = null;
         BufferedReader br = null;
 
-		try {
-			fr = new FileReader(path);
-			br = new BufferedReader(fr);
+        try {
+            fr = new FileReader(path);
+            br = new BufferedReader(fr);
 
-            commands = Parse(br);
+            commands = ParseBuffer(br);
 
         } catch (IOException e) {
-			e.printStackTrace();
-		} finally {
+            e.printStackTrace();
+        } finally {
             try {
                 if (br != null)
                     br.close();
@@ -110,32 +137,13 @@ public class Parser {
             }catch (IOException e){
             }
         }
-		return commands;
-	}
+        return commands;
+    }
 
-    public static LinkedList<Trigger> Parse(BufferedReader reader) {
+    public static LinkedList<Trigger> ParseBuffer(BufferedReader reader) {
         Parser parser = new Parser(reader);
         parser.Parse();
-        return parser.commands;
+        return parser.triggers;
     }
 
-    private static ICommand parseCommands(String[] parts) throws Exception {
-        short layerId = Short.parseShort(parts[0]);
-        String command = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
-
-        switch(parts[1]) {
-            case "LOADBG":
-                return new LoadCommand(layerId, command, parts[2]);
-            case "STOP":
-                return new StopCommand(layerId, command);
-            case "LOOP":
-                return new LoopCommand(layerId);
-            case "CLEAR":
-                return new ClearCommand(layerId);
-            case "CGADD":
-                return new CgAddCommand(layerId, parts[2], parts[3]);
-            default:
-                return new AmcpCommand(layerId, command);
-        }
-    }
 }

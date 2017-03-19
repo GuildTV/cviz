@@ -46,14 +46,14 @@ public class TimelineListing {
         if (!file.isFile() || !file.exists())
             return null;
 
-        LinkedList<Trigger> triggers = Parser.Parse(file.getAbsolutePath());
+        LinkedList<Trigger> triggers = Parser.ParseFile(file.getAbsolutePath());
         if (triggers == null) {
             System.err.println("Failed to parse timeline file: " + file.getName());
             return null;
         }
 
-        HashSet<String> fields = Timeline.getParameterNames(triggers);
+        HashSet<String> parameters = Timeline.getParameterNames(triggers);
 
-        return new TimelineEntry(file.getName(), fields.toArray(new String[fields.size()]));
+        return new TimelineEntry(file.getName(), parameters.toArray(new String[parameters.size()]));
     }
 }

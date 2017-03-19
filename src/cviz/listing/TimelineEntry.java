@@ -5,22 +5,22 @@ import java.util.Arrays;
 
 public class TimelineEntry implements Serializable {
     private final String name;
-    private final String[] datasets;
+    private final String[] parameters;
 
-    TimelineEntry(String name, String[] datasets) {
+    TimelineEntry(String name, String[] parameters) {
         this.name = name;
-        this.datasets = datasets;
+        this.parameters = parameters;
     }
 
     public String getName() {
         return name;
     }
 
-    public String[] getDatasets() {
-        return datasets;
+    public String[] getParameters() {
+        return parameters;
     }
 
     public String toString(){
-        return "Timeline: " + getName() + ", datasets: " + Arrays.toString(getDatasets());
+        return "Timeline: " + getName() + ", parameters: " + Arrays.toString(getParameters());
     }
 }

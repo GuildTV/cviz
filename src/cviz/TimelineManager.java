@@ -45,10 +45,10 @@ public class TimelineManager {
         return timelines.values().stream().map(t -> t.getState()).filter(s -> s.getTimelineSlot().equals(timelineSlot)).findFirst().orElse(null);
     }
 
-    public synchronized boolean loadTimeline(String channelId, String timelineId, String filename, String instanceId) {
-        Timeline timeline = timelines.get(timelineId);
+    public synchronized boolean loadTimeline(String channelId, String timelineSlot, String filename, String instanceId) {
+        Timeline timeline = timelines.get(timelineSlot);
         if (timeline != null && timeline.isRunning()) {
-            System.err.println("Cannot load timeline " + timelineId + "when one is already running");
+            System.err.println("Cannot load timeline to " + timelineSlot + " when one is already running");
             return false;
         }
 
@@ -67,17 +67,17 @@ public class TimelineManager {
             return false;
         }
 
-        LinkedList<Trigger> sequence = Parser.Parse(file.getAbsolutePath());
+        LinkedList<Trigger> sequence = Parser.ParseFile(file.getAbsolutePath());
         if (sequence == null) {
             System.err.println("Failed to parse timeline file: " + filename);
             return false;
         }
 
         AmcpChannel channel = new AmcpChannel(host, channelConfig.getChannel());
-        State state = new State(controlInterface, timelineId, filename, instanceId);
-        timelines.put(timelineId, new Timeline(timelineId, channel, state, sequence));
+        State state = new State(controlInterface, timelineSlot, filename, instanceId);
+        timelines.put(timelineSlot, new Timeline(timelineSlot, channel, state, sequence));
 
-        System.out.println("Timeline " + timelineId + "ready");
+        System.out.println("Timeline " + timelineSlot + "ready");
 
         return true;
     }

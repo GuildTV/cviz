@@ -8,6 +8,7 @@ import java.util.List;
 
 public class Trigger {
 	private final TriggerType type;
+	private final String name;
 	private final long targetFrame;
 	private final int layerId;
 	private final boolean loop;
@@ -15,26 +16,27 @@ public class Trigger {
 	
 	private final LinkedList<ICommand> commands = new LinkedList<>();
 
-	public static Trigger CreateCue(){
-		return new Trigger(TriggerType.CUE, -1, -1, false);
+	public static Trigger CreateCue(String name){
+		return new Trigger(TriggerType.CUE, name, -1, -1, false);
 	}
 	public static Trigger CreateSetup(){
-		return new Trigger(TriggerType.SETUP, -1, -1, false);
+		return new Trigger(TriggerType.SETUP, "Setup", -1, -1, false);
 	}
 	public static Trigger CreateFrame(int layerId, long targetFrame){
-		return new Trigger(TriggerType.FRAME, layerId, targetFrame, false);
+		return new Trigger(TriggerType.FRAME, layerId + " F" + targetFrame, layerId, targetFrame, false);
 	}
 	public static Trigger CreateEnd(int layerId){
-		return new Trigger(TriggerType.END, layerId, -1, false);
+		return new Trigger(TriggerType.END, layerId + " END", layerId, -1, false);
 	}
 	public static Trigger CreateLoop(int layerId){
-		Trigger t = new Trigger(TriggerType.END, layerId, -1, true);
+		Trigger t = new Trigger(TriggerType.END, layerId + " LOOP", layerId, -1, true);
 		t.addCommand(new LoopCommand(layerId));
 		return t;
 	}
 
-	private Trigger(TriggerType type, int layerId, long targetFrame, boolean loop) {
+	private Trigger(TriggerType type, String name, int layerId, long targetFrame, boolean loop) {
 		this.type = type;
+		this.name = name;
 		this.targetFrame = targetFrame;
 		this.layerId = layerId;
 		this.loop = loop;
@@ -59,6 +61,8 @@ public class Trigger {
 	public int getLayerId() {
 		return layerId;
 	}
+
+	public String getName(){ return name; }
 	
 	public void setWaited() {
 		waited = true;
@@ -73,6 +77,6 @@ public class Trigger {
 	}
 
 	public String toString() {
-		return "Trigger: " + type + " " + layerId + " " + targetFrame + " loop: " + loop;
+		return "Trigger: (" + name + ") " + type + " " + layerId + " " + targetFrame + " loop: " + loop;
 	}
 }

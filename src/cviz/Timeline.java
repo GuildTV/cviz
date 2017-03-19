@@ -52,11 +52,6 @@ public class Timeline implements ITimeline, Runnable {
         return layer;
     }
 
-    public void stop() {
-        System.out.println("Timeline " + timelineId + " received stop");
-        running = false;
-    }
-
     public void kill() {
         System.out.println("Timeline " + timelineId + " received kill");
         killNow = true;
@@ -86,11 +81,15 @@ public class Timeline implements ITimeline, Runnable {
         return running;
     }
 
-    public boolean isWaitingForCue() {
+    private Optional<Trigger> getCueTrigger() {
         Optional<Trigger> next =  activeTriggers.stream().filter(t -> !t.isLoop()).findFirst();
         if (!next.isPresent())
-            return false;
-        return next.get().getType() == TriggerType.CUE;
+            return next;
+
+        if(next.get().getType() == TriggerType.CUE)
+            return next;
+
+        return Optional.empty();
     }
 
     private boolean areRequiredParametersDefined() {
@@ -165,8 +164,9 @@ public class Timeline implements ITimeline, Runnable {
                     break;
             }
 
-            if (isWaitingForCue())
-                state.setState(TimelineState.CUE, "TODO - cue name");
+            Optional<Trigger> cueTrigger = getCueTrigger();
+            if (cueTrigger.isPresent())
+                state.setState(TimelineState.CUE, cueTrigger.get().getName());
             else
                 state.setState(TimelineState.RUN);
 
@@ -186,14 +186,14 @@ public class Timeline implements ITimeline, Runnable {
         }
 
         //ensure everything has been reset
-        clearAllUserLayers();
+        clearAllUsedLayers();
 
         System.out.println("Finished running timeline");
         running = false;
         state.setState(TimelineState.CLEAR);
     }
 
-    private void clearAllUserLayers() {
+    private void clearAllUsedLayers() {
         for (Integer l : usedLayers) {
             ICommand c = new ClearCommand(l);
             c.execute(this);
@@ -229,8 +229,8 @@ public class Timeline implements ITimeline, Runnable {
         state.setState(TimelineState.RUN);
 
         // find trigger to cue
-        Optional<Trigger> waiting = activeTriggers.stream().filter(t -> t.getType() == TriggerType.CUE).findFirst();
-        if (!waiting.isPresent() || !isWaitingForCue()) {
+        Optional<Trigger> waiting = getCueTrigger();
+        if (waiting == null) {
             System.err.println("Received a cue without a trigger to fire");
             return;
         }

@@ -26,11 +26,18 @@ public class AmcpCommand extends ICommand {
     private boolean sendCommand(ITimeline timeline, String command, String parameters){
         AmcpLayer layer = timeline.getLayer(getLayerId());
 
-        String[] parameterList = Arrays.stream(parameters.split(" ")).map(p -> timeline.getParameter(p)).toArray(s -> new String[s]);
-        parameters = String.join(" ", parameterList);
+        StringBuilder translatedParameters = new StringBuilder();
+        for (String param: parameters.split(" ")) {
+            param = timeline.getParameter(param);
+
+            param = param.replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
+            param = param.replace("\"", "\\\""); // " => \"
+
+            translatedParameters.append(param).append(" ");
+        }
 
         try {
-            layer.sendCommand(command, parameters);
+            layer.sendCommand(command, translatedParameters.toString());
             return true;
         } catch (Exception e){
             System.err.println("Failed to execute command: " + e.getMessage());

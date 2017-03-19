@@ -46,18 +46,18 @@ public class ControlClient implements Runnable {
     private void runAction(ClientAction action){
         switch(action.getType()){
             case KILL:
-                manager.killTimeline(action.getName());
+                manager.killTimeline(action.getTimelineSlot());
                 break;
 
             case LOAD:
                 String instanceId = action.getInstanceId() != null ? action.getInstanceId() : "";
-                if(manager.loadTimeline(action.getChannel(), action.getName(), action.getTimelineFile(), instanceId)) {
-                    manager.startTimeline(action.getName(), action.getParameters());
+                if(manager.loadTimeline(action.getChannel(), action.getTimelineSlot(), action.getTimelineFile(), instanceId)) {
+                    manager.startTimeline(action.getTimelineSlot(), action.getParameters());
                 }
                 break;
 
             case CUE:
-                manager.triggerCue(action.getName());
+                manager.triggerCue(action.getTimelineSlot());
                 break;
 
             case QUERY:
@@ -80,7 +80,7 @@ public class ControlClient implements Runnable {
                         replyPing();
                     } else if (action.getType() == ClientAction.ActionType.QUERY) {
                         System.out.println("Received state query");
-                        sendState(manager.getStateForTimelineSlot(action.getName()));
+                        sendState(manager.getStateForTimelineSlot(action.getTimelineSlot()));
                     } else {
                         System.out.println("Received action: " + action);
                         runAction(action);

@@ -8,11 +8,11 @@ import cviz.timeline.Trigger;
 
 public class TestParser {
     public static void main(String[] args) {
-        LinkedList<Trigger> commands = Parser.Parse("c:\\caspar\\new.tl");
+        LinkedList<Trigger> commands = Parser.ParseFile("nasta-award.tl");
         Iterator<Trigger> i = commands.iterator();
         while(i.hasNext()) {
             Trigger t = i.next();
-            System.out.println("TRIGGER: " + t.getType() + " " + t.getTargetFrame() + " " + t.getLayerId());
+            System.out.println(t.toString());
 
             t.getCommands().forEach(System.out::println);
         }

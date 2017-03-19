@@ -11,7 +11,7 @@
 	100 LOOP
 	999 LOADBG GE2015/BURN
 }
-@Q {
+@Q Run next {
 	999 PLAY
 	100 LOADBG GE2015/BG_START
 }
@@ -23,7 +23,7 @@
 	100 LOOP
 	999 LOADBG GE2015/BURN
 }
-@Q {
+@Q Run out {
 	999 PLAY
 }
 @7 999 {

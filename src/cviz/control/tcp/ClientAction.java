@@ -14,15 +14,15 @@ public class ClientAction implements Serializable {
     }
 
     private String channel;
-    private String name;
+    private String timelineSlot;
     private ActionType type;
     private String timelineFile;
     private String instanceName;
     private HashMap<String, String> parameters;
 
-    public ClientAction(String channel, String name, ActionType type, String timelineFile, String instanceName, HashMap<String, String> parameters) {
+    public ClientAction(String channel, String timelineSlot, ActionType type, String timelineFile, String instanceName, HashMap<String, String> parameters) {
         this.channel = channel;
-        this.name = name;
+        this.timelineSlot = timelineSlot;
         this.type = type;
         this.timelineFile = timelineFile;
         this.instanceName = instanceName;
@@ -35,11 +35,11 @@ public class ClientAction implements Serializable {
 
         return channel;
     }
-    public String getName() {
-        if (name == null || name.length() == 0)
+    public String getTimelineSlot() {
+        if (timelineSlot == null || timelineSlot.length() == 0)
             return "default";
 
-        return name;
+        return timelineSlot;
     }
 
     public ActionType getType() {
