@@ -15,7 +15,7 @@ public abstract class ICommand {
 
     public abstract boolean execute(ITimeline timeline);
 
-    public String[] getTemplateFields() {
+    public String[] getParameters() {
         return new String[0];
     }
 

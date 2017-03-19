@@ -11,10 +11,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class TCPControlInterface implements IControlInterface {
 
     private final ControlServer server;
-    private final ConcurrentLinkedQueue<State> stateChangeQueue;
+    private final TimelineManager manager;
 
     public TCPControlInterface(Config config, TimelineManager manager){
-        this.stateChangeQueue = new ConcurrentLinkedQueue();
+        this.manager = manager;
 
         this.server = new ControlServer(config, manager);
         new Thread(this.server).start();
@@ -22,16 +22,15 @@ public class TCPControlInterface implements IControlInterface {
 
     @Override
     public void notifyState(State state) {
-        stateChangeQueue.add(state);
+        // Nothing to do. state is broadcasted at regular interval without needing a notify
     }
 
     @Override
     public void run() {
         while(true){
-            State nextState = stateChangeQueue.poll();
-            if (nextState != null) {
-                server.sendState(nextState);
-                continue;
+            State[] state = manager.getCompleteState();
+            for (State st : state) {
+                server.sendState(st);
             }
 
             try {

@@ -111,6 +111,9 @@ public class TimelineManager {
     }
 
     public synchronized void triggerOnVideoFrame(int channel, int layer, long frame, long totalFrames) {
+        if (timelines == null)
+            return;
+
         Timeline[] toTrigger =  timelines.values().stream().filter(t -> t.getChannelNumber() == channel).toArray(Timeline[]::new);
         for(Timeline timeline: toTrigger){
             if (timeline == null)

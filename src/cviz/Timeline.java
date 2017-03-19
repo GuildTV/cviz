@@ -87,11 +87,14 @@ public class Timeline implements ITimeline, Runnable {
     }
 
     public boolean isWaitingForCue() {
-        return activeTriggers.stream().anyMatch(t -> t.getType() == TriggerType.CUE);
+        Optional<Trigger> next =  activeTriggers.stream().filter(t -> !t.isLoop()).findFirst();
+        if (!next.isPresent())
+            return false;
+        return next.get().getType() == TriggerType.CUE;
     }
 
     private boolean areRequiredParametersDefined() {
-        ArrayList<String> fields = getParameterNames(remainingTriggers);
+        HashSet<String> fields = getParameterNames(remainingTriggers);
         for (String fieldName : fields) {
             if (fieldName.indexOf("@") == 0 && !parameters.containsKey(fieldName.substring(1))) {
                 state.setState(TimelineState.ERROR, "Missing required parameter: " + fieldName);
@@ -101,12 +104,12 @@ public class Timeline implements ITimeline, Runnable {
         return true;
     }
 
-    public static ArrayList<String> getParameterNames(LinkedList<Trigger> triggers){
-        ArrayList<String> fields = new ArrayList<>();
+    public static HashSet<String> getParameterNames(LinkedList<Trigger> triggers){
+        HashSet<String> fields = new HashSet<>();
 
         for (Trigger t : triggers) {
             for (ICommand c : t.getCommands()) {
-                fields.addAll(Arrays.asList(c.getTemplateFields()));
+                fields.addAll(Arrays.asList(c.getParameters()));
             }
         }
 
@@ -227,7 +230,7 @@ public class Timeline implements ITimeline, Runnable {
 
         // find trigger to cue
         Optional<Trigger> waiting = activeTriggers.stream().filter(t -> t.getType() == TriggerType.CUE).findFirst();
-        if (!waiting.isPresent()) {
+        if (!waiting.isPresent() || !isWaitingForCue()) {
             System.err.println("Received a cue without a trigger to fire");
             return;
         }

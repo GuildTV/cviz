@@ -11,7 +11,7 @@ public class LoadCommand extends AmcpCommand {
         this.filename = filename;
     }
 
-    public String[] getTemplateFields() {
+    public String[] getParameters() {
         if (filename.indexOf("@") != 0)
             return new String[0];
 

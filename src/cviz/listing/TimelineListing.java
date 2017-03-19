@@ -7,6 +7,7 @@ import cviz.timeline.Trigger;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class TimelineListing {
@@ -51,7 +52,7 @@ public class TimelineListing {
             return null;
         }
 
-        ArrayList<String> fields = Timeline.getParameterNames(triggers);
+        HashSet<String> fields = Timeline.getParameterNames(triggers);
 
         return new TimelineEntry(file.getName(), fields.toArray(new String[fields.size()]));
     }
