@@ -3,7 +3,7 @@ An example which loads a video and plays it when cued is as follows.
 ```
 # run setup
 @ {
-  100 LOAD GE2015/BG_START
+  100 LOADBG GE2015/BG_START
 }
 # play on cue
 @Q {
@@ -45,7 +45,7 @@ These are run when the specified layer reaches a certain frame.
 ### End
 These are run when the video in a layer reaches the end.
 
-Note: putting an end trigger on a looped video may cause the trigger to fire on the end of the first play.
+Note: putting an end trigger on a looped video may cause the trigger to fire only on the end of the first play.
 
 ```
 # @END layer {
@@ -66,10 +66,20 @@ These are run when the cued by a control interface. Only the first cue at the to
 ## Commands
 All commands must be placed inside trigger blocks.
 
-Each command corresponds with a casparcg command, although with slightly different parameter order.
+All of the Caspar CG AMCP commands are supported, but must be written in the following format, with the layer number first and channel omitted.
+```
+  100 CLEAR
+```
+
+The commands support the use of runtime variables for any command parameter, to be passed in from the client.
+```
+  100 OPACITY @o1 @o2
+  100 PLAY @v1
+```
 
 ### Clear
 Clears the layer of the playing video or template.
+Note: This clears very aggressively, by clearing the layer and resetting any opacity and transformations applied.
 
 ```
   100 CLEAR
@@ -94,84 +104,10 @@ Note: a video must have been loaded in the layer before running this command.
 ```
 
 ### Loop
-Plays the video loaded into the specified layer in a loop.
+This is a modified play command to loop the loaded video in a reliable and predictable fashion.
 
 Note: a video must have been loaded in the layer before running this command.
 
 ```
   100 LOOP
-```
-
-### Stop
-Stops the video playing in the specified layer.
-
-```
-  100 STOP
-```
-
-### Pause
-Pauses the video playing in the specified layer.
-
-```
-  100 PAUSE
-```
-
-### Resume
-Resumes the video playing in the specified layer.
-
-```
-  100 RESUME
-```
-
-### Opacity
-Changes the opacity of a layer. This relays parameters directly to casparcg, documentation an be found on their wiki: [CasparCG-Opacity](http://casparcg.com/wiki/CasparCG_2.0_AMCP_Protocol#MIXER_OPACITY)
-
-```
-  100 OPACITY 0 
-```
-
-### Transform
-Transforms a layer. This relays parameters directly to casparcg, documentation an be found on their wiki: [CasparCG-Transform](http://casparcg.com/wiki/CasparCG_2.0_AMCP_Protocol#MIXER_FILL)
-
-```
-  100 TRANSFORM 0 0 100 100
-```
-
-### CgAdd
-Loads a flash/html template into a layer.
-
-If the data parameter starts with an @, it is used as an id in the dataset passed when starting the timeline, otherwise the value is passed directly through.
-
-Note: templates are set to not autostart when loaded
-
-```
-  100 CGADD lowerthird2 @data
-```
-
-### CgNext
-Fires a next trigger to the flash/html template in the layer.
-
-```
-  100 CGNEXT
-```
-
-### CgPlay
-Play an already loaded template
-
-```
-  100 CGPLAY
-```
-
-### CgRemove
-Removes a template loaded into a layer
-
-```
-  100 CGREMOVE
-```
-  
-### CgStop
-Fires the stop trigger for the flash/html template in the layer.
-
-```
-  100 CGTSOP
 ```
