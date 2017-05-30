@@ -284,9 +284,22 @@ public class Timeline implements ITimeline, Runnable {
         activeTriggers.remove(trigger);
     }
 
-    public String getParameterValue(String name) {
-        if (name.indexOf("@") == 0)
-            return parameterValues.get(name.substring(1));
+    public String getParameterValue(String name, boolean escape) {
+        if (name.indexOf("@") == 0) {
+            String param = parameterValues.get(name.substring(1));
+            if (param == null)
+                return name;
+
+            if (escape){
+                param = param.replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
+                param = param.replace("\"", "\\\""); // " => \"
+            }
+
+            return param;
+        }
+
+        if (name.indexOf("\"@") == 0 && name.lastIndexOf("\"") == name.length()-1)
+            return "\"" + getParameterValue(name.substring(1, name.length()-1), escape) + "\"";
 
         return name;
     }

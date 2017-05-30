@@ -23,10 +23,8 @@ public class AmcpCommand extends ICommand {
 
         StringBuilder translatedParameters = new StringBuilder();
         for (String param: parameters.split(" ")) {
-            param = timeline.getParameterValue(param);
+            param = timeline.getParameterValue(param, true);
 
-            param = param.replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
-            param = param.replace("\"", "\\\""); // " => \"
 
             translatedParameters.append(param).append(" ");
         }
