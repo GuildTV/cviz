@@ -10,13 +10,16 @@ public class Config implements Serializable {
     private String casparHost;
     private int casparPort;
 
+    private String templateDir;
+
     private ChannelConfig[] channels;
 
-    public Config(int port, int oscPort, String casparHost, int casparPort, ChannelConfig[] channels) {
+    public Config(int port, int oscPort, String casparHost, int casparPort, String templateDir, ChannelConfig[] channels) {
         this.port = port;
         this.oscPort = oscPort;
         this.casparHost = casparHost;
         this.casparPort = casparPort;
+        this.templateDir = templateDir;
         this.channels = channels;
     }
 
@@ -46,6 +49,13 @@ public class Config implements Serializable {
             return 5250;
 
         return casparPort;
+    }
+
+    public String getTemplateDir(){
+        if (templateDir == null || templateDir.equals(""))
+            return "./";
+
+        return templateDir;
     }
 
     public ChannelConfig[] getChannels() {

@@ -12,7 +12,7 @@ import java.util.LinkedList;
 
 public class TimelineListing {
     public static ArrayList<TimelineEntry> Scan() {
-        return ScanDir(new File(TimelineManager.timelinePath));
+        return ScanDir(new File("./")); // TODO - this path
     }
 
     public static ArrayList<TimelineEntry> ScanDir(File dir) {

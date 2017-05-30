@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.Map;
 
 public class TimelineManager {
-    public static final String timelinePath = "./";
     public static final String timelineExt = ".tl";
 
     private final AmcpCasparDevice host;
@@ -61,7 +60,7 @@ public class TimelineManager {
             return false;
         }
 
-        File file = new File(timelinePath + filename + timelineExt);
+        File file = new File(config.getTemplateDir() + filename + timelineExt);
         if (!file.exists() || !file.isFile()) {
             System.err.println("Cannot find new timeline file: " + filename);
             return false;
