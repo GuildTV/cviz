@@ -127,14 +127,6 @@ public class Timeline implements ITimeline, Runnable {
             return;
         }
 
-        Trigger setupTrigger = null;
-        if (remainingTriggers.peekFirst().getType() == TriggerType.SETUP)
-            setupTrigger = remainingTriggers.pop();
-
-        state.setState(TimelineState.RUN);
-
-        System.out.println("Starting timeline " + timelineId);
-
         // collect the list of layers being altered
         for (Trigger t : remainingTriggers) {
             for (ICommand c : t.getCommands()) {
@@ -143,6 +135,14 @@ public class Timeline implements ITimeline, Runnable {
         }
 
         System.out.println("Template spans " + usedLayers.size() + " layers");
+
+        Trigger setupTrigger = null;
+        if (remainingTriggers.peekFirst().getType() == TriggerType.SETUP)
+            setupTrigger = remainingTriggers.pop();
+
+        state.setState(TimelineState.RUN);
+
+        System.out.println("Starting timeline " + timelineId);
 
         // set some triggers as active
         promoteTriggersToActive();
