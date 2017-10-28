@@ -291,6 +291,7 @@ public class Timeline implements ITimeline, Runnable {
                 return name;
 
             if (escape){
+                param = param.replace("\\n", "\\\\n"); // " => \"
                 param = param.replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
                 param = param.replace("\"", "\\\""); // " => \"
             }
