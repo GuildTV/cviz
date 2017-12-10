@@ -39,22 +39,47 @@ namespace CViz
             {
                 OscMessage message = e.Message;
                 Match match = Regex.Match(message.Address, "/channel/([0-9]+)/stage/layer/([0-9]+)/file/frame");
-                if (!match.Success)
+                if (match.Success)
+                {
+                    ParseVideoFrameMessage(message, match);
                     return;
+                }
 
-                int channel = int.Parse(match.Groups[1].Value);
-                int layer = int.Parse(match.Groups[2].Value);
-
-                long frame = (long) message.Data[0];
-                long totalFrames = (long) message.Data[1];
-
-                Log.InfoFormat("Video progress: {0}-{1} {2}/{3}", channel, layer, frame, totalFrames);
-                _manager.TriggerOnVideoFrame(channel, layer, frame, totalFrames);
+                match = Regex.Match(message.Address, "/channel/([0-9]+)/output/port/([0-9]+)/frame");
+                if (match.Success)
+                {
+                    ParseChannelFrameMessage(message, match);
+                    return;
+                }
+                
             }
             catch (Exception ex)
             {
                 Log.ErrorFormat("Failed to parse: {0}", ex.Message);
             }
+        }
+
+        private void ParseVideoFrameMessage(OscMessage message, Match match)
+        {
+            int channel = int.Parse(match.Groups[1].Value);
+            int layer = int.Parse(match.Groups[2].Value);
+
+            long frame = (long)message.Data[0];
+            long totalFrames = (long)message.Data[1];
+
+//            Log.InfoFormat("Video progress: {0}-{1} {2}/{3}", channel, layer, frame, totalFrames);
+            _manager.TriggerOnVideoFrame(channel, layer, frame, totalFrames);
+        }
+
+        private void ParseChannelFrameMessage(OscMessage message, Match match)
+        {
+            int channel = int.Parse(match.Groups[1].Value);
+            int port = int.Parse(match.Groups[2].Value);
+
+            long frame = (long)message.Data[0];
+
+//            Log.InfoFormat("Channel frame: {0}-{1} {2}", channel, port, frame);
+            _manager.TriggerOnChannelFrame(channel, port, frame);
         }
 
         private static void ReceiveError(object sender, ExceptionEventArgs e)

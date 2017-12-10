@@ -6,5 +6,6 @@
         Frame,
         End,
         Cue,
+        Delay,
     }
 }

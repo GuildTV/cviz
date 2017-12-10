@@ -21,6 +21,9 @@ namespace CViz.Timeline
         private readonly ConcurrentDictionary<int, LayerState> _currentLayerState;
         private readonly HashSet<int> _usedLayers;
 
+        private int _portId;
+        private long _portFirstFrame;
+
         private ImmutableDictionary<string, string> _parameterValues;
 
         public Timeline(string timelineId, AmcpConnection client, int channelId, TimelineState state, List<Trigger> triggers)
@@ -150,7 +153,7 @@ namespace CViz.Timeline
                 {
                     Thread.Sleep(10);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
             }
@@ -190,7 +193,7 @@ namespace CViz.Timeline
 
                 while (_remainingTriggers.Any())
                 {
-                    var t =_remainingTriggers.FirstOrDefault();
+                    Trigger t =_remainingTriggers.FirstOrDefault();
                     if (t == null)
                         break;
 
@@ -198,7 +201,7 @@ namespace CViz.Timeline
 
                     _remainingTriggers.RemoveAt(0);
                     _activeTriggers.Add(t);
-
+                    
                     // we only want to add up until a manual trigger
                     if (t.Type == TriggerType.Cue)
                         break;
@@ -232,7 +235,6 @@ namespace CViz.Timeline
 
                 // run the trigger
                 ExecuteTrigger(waiting);
-                _activeTriggers.Remove(waiting);
 
                 if (!PromoteTriggersToActive())
                 {
@@ -291,6 +293,48 @@ namespace CViz.Timeline
             }
         }
 
+        internal void TriggerOnChannelFrame(int port, long frame)
+        {
+            // Use the first port that is found
+            if (_portId == 0)
+                _portId = port;
+            if (_portId != port)
+                return;
+
+            if (_portFirstFrame == 0)
+                _portFirstFrame = frame;
+
+            if (frame <= _portFirstFrame)
+                return;
+
+            lock (_activeTriggers)
+            {
+                if (!IsRunning)
+                    return;
+
+                // find trigger to cue
+                Trigger next = _activeTriggers.FirstOrDefault(t => !t.Loop);
+
+                if (next?.Type != TriggerType.Delay)
+                    return;
+
+                // If the counter hasnt started, then set it as starting on the previous frame
+                if (!next.DelayStarted)
+                    next.StartDelay(frame - 1);
+
+                // Check if hit the target yet
+                if (next.DelayEndAt > frame)
+                    return;
+
+                ExecuteTrigger(next);
+
+                if (!PromoteTriggersToActive())
+                {
+                    Log.InfoFormat("Reached end of timeline: {0}", _timelineId);
+                }
+            }
+        }
+
         private void ExecuteTrigger(Trigger trigger)
         {
             lock (_activeTriggers)
@@ -345,6 +389,5 @@ namespace CViz.Timeline
             lock (_activeTriggers)
                 _activeTriggers.RemoveAll(predicate);
         }
-
     }
 }

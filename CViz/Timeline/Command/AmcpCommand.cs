@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using log4net;
 using StilSoft.CasparCG.AmcpClient.Commands;
@@ -26,7 +27,7 @@ namespace CViz.Timeline.Command
         private bool SendCommand(ITimeline timeline, string command, string parameters)
         {
             var translatedParameters = new StringBuilder();
-            foreach (string param in parameters.Split(' '))
+            foreach (string param in parameters.Split(' ').Where(p => p.Length > 0))
             {
                 string param2 = timeline.GetParameterValue(param, true);
 

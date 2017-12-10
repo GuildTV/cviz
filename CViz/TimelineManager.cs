@@ -156,5 +156,16 @@ namespace CViz
                 }
             }
         }
+
+        internal void TriggerOnChannelFrame(int channel, int port, long frame)
+        {
+            lock (_timelines)
+            {
+                foreach (Timeline.Timeline timeline in _timelines.Values.Where(t => t.ChannelNumber == channel))
+                {
+                    timeline.TriggerOnChannelFrame(port, frame);
+                }
+            }
+        }
     }
 }

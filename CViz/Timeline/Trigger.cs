@@ -12,11 +12,16 @@ namespace CViz.Timeline
         public bool Loop { get; }
         public bool Waited { get; private set; }
 
+        public bool DelayStarted { get; private set; }
+        public long DelayStartedAt { get; private set; }
+        public long DelayEndAt => DelayStartedAt + TargetFrame;
+
         public ImmutableList<CommandBase> Commands { get; }
 
         public static Trigger CreateCue(string name) => new Trigger(TriggerType.Cue, name);
         public static Trigger CreateSetup() => new Trigger(TriggerType.Setup, "Setup");
-        public static Trigger CreateEnd(int layerId) => new Trigger(TriggerType.End, $"{layerId} End");
+        public static Trigger CreateEnd(int layerId) => new Trigger(TriggerType.End, $"{layerId} End", layerId);
+        public static Trigger CreateDelay(int duration) => new Trigger(TriggerType.Delay, $"Delay {duration}", targetFrame: duration);
 
         public static Trigger CreateFrame(int layerId, long targetFrame)
         {
@@ -49,6 +54,15 @@ namespace CViz.Timeline
         public void SetWaited()
         {
             Waited = true;
+        }
+
+        public void StartDelay(long startFrame)
+        {
+            if (DelayStarted)
+                return;
+            
+            DelayStarted = true;
+            DelayStartedAt = startFrame;
         }
 
         public override string ToString()

@@ -15,6 +15,7 @@ namespace CViz.Timeline
         private const string CueTriggerPattern = "^@Q (.*) \\{$";
         private const string EndTriggerPattern = "^@END ([0-9]+) \\{$";
         private const string FrameTriggerPattern = "^@([0-9]+) ([0-9]+) \\{$";
+        private const string DelayTriggerPattern = "^@DELAY ([0-9]+) \\{$";
 
         private const string LoadCommandPattern = "^(LOAD|LOADBG) ([\"].+?[\"]|[^ ]+)";
         private const string StopCommandPattern = "^STOP";
@@ -103,6 +104,10 @@ namespace CViz.Timeline
             matcher = Regex.Match(line, FrameTriggerPattern);
             if (matcher.Success)
                 return Trigger.CreateFrame(int.Parse(matcher.Groups[2].Value), long.Parse(matcher.Groups[1].Value));
+            
+            matcher = Regex.Match(line, DelayTriggerPattern);
+            if (matcher.Success)
+                return Trigger.CreateDelay(int.Parse(matcher.Groups[1].Value));
 
             return null;
         }
