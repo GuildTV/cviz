@@ -115,6 +115,9 @@ namespace CViz.Timeline
         private static CommandBase ParseCommand(string line)
         {
             string[] parts = line.Split(new []{' '}, 2);
+            if (parts[0] == "HTTP")
+                return ParseHttpCommand(parts[1]);
+
             int layerId = int.Parse(parts[0]);
             string command = parts[1];
 
@@ -135,6 +138,12 @@ namespace CViz.Timeline
                 return new ClearCommand(layerId);
 
             return new AmcpCommand(layerId, command);
+        }
+
+        private static HttpCommand ParseHttpCommand(string line)
+        {
+            string[] parts = line.Split(' ');
+            return new HttpCommand(parts[0], parts[1]);
         }
 
         public static List<Trigger> ParseFile(string path)

@@ -110,7 +110,7 @@ namespace CViz.Timeline
             }
 
             // collect the list of layers being altered
-            _usedLayers.AddRange(_remainingTriggers.SelectMany(t => t.Commands).Select(c => c.LayerId));
+            _usedLayers.AddRange(_remainingTriggers.SelectMany(t => t.Commands).Select(c => c.LayerId).Where(l => l > 0));
 
             Log.InfoFormat("Template spans {0} layers", _usedLayers.Count);
 
