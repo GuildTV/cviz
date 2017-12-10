@@ -43,11 +43,13 @@ namespace CViz.Timeline
             catch (IOException)
             {
                 _triggers = null;
+                throw;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.StackTrace);
                 _triggers = null;
+                throw;
             }
         }
 
@@ -128,23 +130,21 @@ namespace CViz.Timeline
 
         public static List<Trigger> ParseFile(string path)
         {
-            List<Trigger> commands = null;
-
             try
             {
                 using (new StreamReader(path))
                 {
-                    commands = ParseStream(new StreamReader(path));
+                    return ParseStream(new StreamReader(path));
                 }
             }
             catch (IOException e)
             {
                 Console.WriteLine(e.StackTrace);
+                throw;
             }
-            return commands;
         }
 
-        public static List<Trigger> ParseStream(StreamReader reader)
+        private static List<Trigger> ParseStream(StreamReader reader)
         {
             Parser parser = new Parser(reader);
             parser.Parse();

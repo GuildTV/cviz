@@ -86,8 +86,12 @@ namespace CViz
                     return false;
                 }
 
-                List<Trigger> sequence = Parser.ParseFile(fullPath);
-                if (sequence == null)
+                List<Trigger> sequence;
+                try
+                {
+                    sequence = Parser.ParseFile(fullPath);
+                }
+                catch (Exception)
                 {
                     Console.WriteLine("Failed to parse timeline file: " + filename);
                     return false;
