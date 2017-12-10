@@ -1,0 +1,16 @@
+﻿{
+  "port": 3456,
+  "oscPort": 5253,
+
+  "casparHost": "127.0.0.1",
+  "casparPort": 5250,
+
+  "templateDir": "./timelines/",
+
+  "channels":[
+    {
+      "id": "default",
+      "channel": 1
+    }
+  ]
+}
