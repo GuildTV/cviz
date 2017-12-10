@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using CViz.Timeline;
 using CViz.Util;
 
 namespace CViz.Control.Tcp
@@ -17,7 +18,7 @@ namespace CViz.Control.Tcp
             new Thread(_server.Run).Start();
         }
 
-        public void NotifyState(State.State state)
+        public void NotifyState(TimelineState state)
         {
             // Nothing to do. state is broadcasted at regular interval without needing a notify
         }

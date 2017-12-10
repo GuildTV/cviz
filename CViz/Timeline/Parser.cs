@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using CViz.Timeline.Command;
+using log4net;
 
 namespace CViz.Timeline
 {
     class Parser
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Parser));
+
         private const string SetupTriggerPattern = "^@ \\{$";
         private const string CueTriggerPattern = "^@Q (.*) \\{$";
         private const string EndTriggerPattern = "^@END ([0-9]+) \\{$";
@@ -47,7 +50,8 @@ namespace CViz.Timeline
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.StackTrace);
+                Log.ErrorFormat("Parser error: {0}", e.Message);
+                Log.ErrorFormat(e.StackTrace);
                 _triggers = null;
                 throw;
             }
@@ -139,7 +143,8 @@ namespace CViz.Timeline
             }
             catch (IOException e)
             {
-                Console.WriteLine(e.StackTrace);
+                Log.ErrorFormat("Parser error: {0}", e.Message);
+                Log.ErrorFormat(e.StackTrace);
                 throw;
             }
         }

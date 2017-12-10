@@ -5,12 +5,16 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using CViz.Timeline;
 using CViz.Util;
+using log4net;
 
 namespace CViz.Control.Tcp
 {
     class ControlServer
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ControlServer));
+
         private readonly Config.Config _config;
         private readonly TimelineManager _manager;
         private readonly List<ControlClient> _clients = new List<ControlClient>();
@@ -31,7 +35,7 @@ namespace CViz.Control.Tcp
             if (_server != null)
                 return;
 
-            Console.WriteLine("Starting Server");
+            Log.InfoFormat("Starting TCP Control Server");
 
             // try and open the server
             try
@@ -42,15 +46,14 @@ namespace CViz.Control.Tcp
                 _server.Bind(localEndPoint);
                 _server.Listen(100);
 
-                Console.WriteLine("Server started on port: " + _config.Port);
+                Log.InfoFormat("Listening on port: {0}", _config.Port);
 
                 while (true)
                 {
                     // Set the event to nonsignaled state.  
                     _allDone.Reset();
 
-                    // Start an asynchronous socket to listen for connections.  
-                    Console.WriteLine("Waiting for a connection...");
+                    // Start an asynchronous socket to listen for connections. 
                     _server.BeginAccept(AcceptCallback, _server);
 
                     // Wait until a connection is made before continuing.  
@@ -59,11 +62,11 @@ namespace CViz.Control.Tcp
             }
             catch (IOException e)
             {
-                Console.WriteLine("Failed server: " + e.Message);
+                Log.ErrorFormat("Server error: {0}", e.Message);
                 Environment.Exit(10);
             }
 
-            Console.WriteLine("Server stopped");
+//            Console.WriteLine("Server stopped");
         }
 
         private void AcceptCallback(IAsyncResult ar)
@@ -71,11 +74,11 @@ namespace CViz.Control.Tcp
             // Signal the main thread to continue.  
             _allDone.Set();
 
-            Console.WriteLine("client connected");
-
             // Get the socket that handles the client request.  
             Socket listener = (Socket)ar.AsyncState;
             Socket handler = listener.EndAccept(ar);
+
+            Log.InfoFormat("Client connected: {0}", handler.RemoteEndPoint);
 
             ControlClient client = new ControlClient(_manager, handler);
             lock (_clients)
@@ -84,7 +87,6 @@ namespace CViz.Control.Tcp
             // handle messages from the client
             new Thread(client.Run).Start();
             client.SendCompleteState();
-            Console.WriteLine("client ready");
         }
 
 
@@ -95,7 +97,7 @@ namespace CViz.Control.Tcp
         {
             try
             {
-                Console.WriteLine("Stopping Server");
+                Log.InfoFormat("Stopping Server");
                 _server.Close();
             }
             catch (IOException)
@@ -104,7 +106,7 @@ namespace CViz.Control.Tcp
             _server = null;
         }
 
-        public void SendState(State.State state)
+        public void SendState(TimelineState state)
         {
             lock (_clients)
                 _clients.Where(c => c.IsConnected).ForEach(c => c.SendState(state));

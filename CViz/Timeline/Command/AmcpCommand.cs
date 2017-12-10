@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Text;
+using log4net;
 using StilSoft.CasparCG.AmcpClient.Commands;
-using StilSoft.CasparCG.AmcpClient.Common;
 
 namespace CViz.Timeline.Command
 {
     class AmcpCommand : CommandBase
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(AmcpCommand));
+
         private readonly string _command;
 
         public AmcpCommand(int layerId, string command) : base(layerId)
@@ -28,17 +30,17 @@ namespace CViz.Timeline.Command
             {
                 string param2 = timeline.GetParameterValue(param, true);
 
-                translatedParameters.Append(param2).Append(" ");
+                translatedParameters.Append("\"").Append(param2).Append("\" ");
             }
 
             try
             {
-                new CustomCommand($"{command} {LayerId} {translatedParameters}").Execute(timeline.Client);
+                new CustomCommand($"{command} {timeline.ChannelNumber}-{LayerId} {translatedParameters}").Execute(timeline.Client);
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to execute command: " + e.Message);
+                Log.ErrorFormat("Failed to execute command: {0}", e.Message);
                 return false;
             }
         }
@@ -47,7 +49,7 @@ namespace CViz.Timeline.Command
 
         public override string ToString()
         {
-            return string.Format("{0}: {1} {2}", CommandName, LayerId, _command);
+            return $"{CommandName}: {LayerId} {_command}";
         }
     }
 }

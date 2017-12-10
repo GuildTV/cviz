@@ -1,26 +1,29 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
-using CViz.State;
 using CViz.Timeline.Command;
 using CViz.Util;
+using log4net;
 using StilSoft.CasparCG.AmcpClient;
 
 namespace CViz.Timeline
 {
-    class Timeline : ITimeline 
+    class Timeline : ITimeline
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Timeline));
+
         private readonly string _timelineId;
         private readonly List<Trigger> _remainingTriggers;
         private readonly List<Trigger> _activeTriggers;
         private readonly ConcurrentDictionary<int, LayerState> _currentLayerState;
         private readonly HashSet<int> _usedLayers;
 
-        private Dictionary<string, string> _parameterValues;
+        private ImmutableDictionary<string, string> _parameterValues;
 
-        public Timeline(string timelineId, AmcpConnection client, int channelId, State.State state, List<Trigger> triggers)
+        public Timeline(string timelineId, AmcpConnection client, int channelId, TimelineState state, List<Trigger> triggers)
         {
             _timelineId = timelineId;
             Client = client;
@@ -32,25 +35,24 @@ namespace CViz.Timeline
             _currentLayerState = new ConcurrentDictionary<int, LayerState>();
             _usedLayers = new HashSet<int>();
 
-            state.SetState(TimelineState.Ready);
+            state.SetState(TimelineState.StateType.Ready);
         }
 
         public int ChannelNumber { get; }
-        public State.State State { get; }
+        public TimelineState State { get; }
         public AmcpConnection Client { get; }
         public bool IsRunning { get; private set; }
         private bool KillNow { get; set; }
 
         public void Kill()
         {
-            Console.WriteLine("Timeline " + _timelineId + " received kill");
+            Log.InfoFormat("Killing timeline: {0}", _timelineId);
             KillNow = true;
             IsRunning = false;
         }
 
         public void SetLayerState(int layerId, LayerState state) => _currentLayerState[layerId] = state;
         public LayerState GetLayerState(int layerId) => _currentLayerState[layerId];
-
         
         private Trigger GetCueTrigger()
         {
@@ -71,7 +73,7 @@ namespace CViz.Timeline
             {
                 if (fieldName.IndexOf("@", StringComparison.InvariantCulture) == 0 && !_parameterValues.ContainsKey(fieldName.Substring(1)))
                 {
-                    State.SetState(TimelineState.Error, "Missing required parameter: " + fieldName);
+                    State.SetState(TimelineState.StateType.Error, "Missing required parameter: " + fieldName);
                     return false;
                 }
             }
@@ -96,10 +98,10 @@ namespace CViz.Timeline
             }
 
             // run any setup triggers
-            long setupTriggerCount = _remainingTriggers.Count(t => t.Type == TriggerType.Cue);
+            long setupTriggerCount = _remainingTriggers.Count(t => t.Type == TriggerType.Setup);
             if (setupTriggerCount > 1)
             {
-                Console.WriteLine("Timeline can only have one setup trigger");
+                Log.WarnFormat("Timeline can only have one setup trigger");
                 IsRunning = false;
                 return;
             }
@@ -107,7 +109,7 @@ namespace CViz.Timeline
             // collect the list of layers being altered
             _usedLayers.AddRange(_remainingTriggers.SelectMany(t => t.Commands).Select(c => c.LayerId));
 
-            Console.WriteLine("Template spans " + _usedLayers.Count + " layers");
+            Log.InfoFormat("Template spans {0} layers", _usedLayers.Count);
 
             Trigger setupTrigger = _remainingTriggers.FirstOrDefault();
             if (setupTrigger != null && setupTrigger.Type == TriggerType.Setup)
@@ -119,9 +121,9 @@ namespace CViz.Timeline
                 setupTrigger = null;
             }
 
-            State.SetState(TimelineState.Run);
+            State.SetState(TimelineState.StateType.Run);
 
-            Console.WriteLine("Starting timeline " + _timelineId);
+            Log.InfoFormat("Starting timeline: {0}", _timelineId);
 
             // set some triggers as active
             PromoteTriggersToActive();
@@ -139,9 +141,9 @@ namespace CViz.Timeline
 
                 Trigger cueTrigger = GetCueTrigger();
                 if (cueTrigger != null)
-                    State.SetState(TimelineState.Cue, cueTrigger.Name);
+                    State.SetState(TimelineState.StateType.Cue, cueTrigger.Name);
                 else
-                    State.SetState(TimelineState.Run);
+                    State.SetState(TimelineState.StateType.Run);
 
                 // wait until the timeline has been finished
                 try
@@ -150,14 +152,13 @@ namespace CViz.Timeline
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.StackTrace);
                 }
             }
 
             // if kill command has been sent, then wipe everything
             if (KillNow)
             {
-                State.SetState(TimelineState.Error, "Killed");
+                State.SetState(TimelineState.StateType.Error, "Killed");
                 _remainingTriggers.Clear();
                 // ReSharper disable once InconsistentlySynchronizedField
                 _activeTriggers.Clear();
@@ -166,9 +167,9 @@ namespace CViz.Timeline
             //ensure everything has been reset
             ClearAllUsedLayers();
 
-            Console.WriteLine("Finished running timeline");
+            Log.InfoFormat("Finished timeline: {0}", _timelineId);
             IsRunning = false;
-            State.SetState(TimelineState.Clear);
+            State.SetState(TimelineState.StateType.Clear);
         }
 
         private void ClearAllUsedLayers()
@@ -177,7 +178,7 @@ namespace CViz.Timeline
             {
                 CommandBase c = new ClearCommand(l);
                 c.Execute(this);
-                Console.WriteLine("Clearing layer " + l);
+                Log.InfoFormat("Clearing layer: {0}", l);
             }
         }
 
@@ -213,19 +214,19 @@ namespace CViz.Timeline
             {
                 if (!IsRunning)
                 {
-                    Console.WriteLine("Received cue when not running");
+                    Log.InfoFormat("Recevied cue when not running");
                     return;
                 }
-                Console.WriteLine("Received a cue");
+                Log.InfoFormat("Recevied cue for: {0}", _timelineId);
                 // TODO - maybe this should be buffered, otherwise there could be some timing issues
 
-                State.SetState(TimelineState.Run);
+                State.SetState(TimelineState.StateType.Run);
 
                 // find trigger to cue
                 Trigger waiting = GetCueTrigger();
                 if (waiting == null)
                 {
-                    Console.WriteLine("Received a cue without a trigger to fire");
+                    Log.InfoFormat("Recevied cue with no trigger to fire: {0}", _timelineId);
                     return;
                 }
 
@@ -235,7 +236,7 @@ namespace CViz.Timeline
 
                 if (!PromoteTriggersToActive())
                 {
-                    Console.WriteLine("Reached end of timeline");
+                    Log.InfoFormat("Reached end of timeline: {0}", _timelineId);
                 }
             }
         }
@@ -261,17 +262,16 @@ namespace CViz.Timeline
                         targetFrame = t.TargetFrame;
                     }
 
-                    LayerState state = _currentLayerState[layer];
-                    if (state == null)
+                    if (!_currentLayerState.TryGetValue(layer, out LayerState state))
                     {
-                        Console.WriteLine("Tried to get state and failed");
+                        Log.InfoFormat("Failed to get layer state: {0}-{1}", _timelineId, layer);
                     }
                     // TODO - this check needs to ensure that an appropriate amount of time has passed
                     // NOTE: this also gets hit if the source video is a different framerate to the channel
                     else if (state.LastFrame == frame && targetFrame > frame)
                     {
                         // the video didn't play to the end for some reason, move on
-                        Console.WriteLine("Loop didn't reach the end, check your video!");
+                        Log.InfoFormat("Loop didn't reach the end, check your video! {0}-{1}", _timelineId, layer);
 
                         ExecuteTrigger(t);
                     }
@@ -286,8 +286,7 @@ namespace CViz.Timeline
                     }
                 }
 
-                LayerState st;
-                if (_currentLayerState.TryGetValue(layer, out st))
+                if (_currentLayerState.TryGetValue(layer, out LayerState st))
                     st.LastFrame = frame;
             }
         }
@@ -326,12 +325,12 @@ namespace CViz.Timeline
             return name;
         }
 
-        internal void SetParameterValues(Dictionary<string, string> parameterValues)
+        internal void SetParameterValues(ImmutableDictionary<string, string> parameterValues)
         {
             if (_parameterValues != null)
                 return;
 
-            _parameterValues = parameterValues ?? new Dictionary<string, string>();
+            _parameterValues = parameterValues ?? ImmutableDictionary<string, string>.Empty;
         }
 
 

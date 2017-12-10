@@ -36,6 +36,12 @@
     <StartupObject>CViz.CasparViz</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Log4Net.Async, Version=2.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Log4Net.Async.2.0.4\lib\net40\Log4Net.Async.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -72,8 +78,7 @@
     <Compile Include="LayerState.cs" />
     <Compile Include="OSCWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="State\State.cs" />
-    <Compile Include="State\TimelineState.cs" />
+    <Compile Include="Timeline\TimelineState.cs" />
     <Compile Include="TimelineManager.cs" />
     <Compile Include="Timeline\Command\AmcpCommand.cs" />
     <Compile Include="Timeline\Command\ClearCommand.cs" />
@@ -90,6 +95,9 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />

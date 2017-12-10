@@ -1,10 +1,13 @@
 ﻿using System;
+using log4net;
 using StilSoft.CasparCG.AmcpClient.Commands.Basic;
 
 namespace CViz.Timeline.Command
 {
     class LoopCommand : CommandBase
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(LoopCommand));
+
         public LoopCommand(int layerId) : base(layerId)
         {
         }
@@ -20,21 +23,21 @@ namespace CViz.Timeline.Command
 
                 new LoadBgCommand(timeline.ChannelNumber, LayerId, state.VideoName).Execute(timeline.Client);
                 timeline.AddTrigger(Trigger.CreateLoop(LayerId));
-
-                Console.WriteLine("Looping: " + state);
+                
+                Log.InfoFormat("Looping: {0}", state);
 
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to execute command: " + e.Message);
+                Log.ErrorFormat("Failed to execute command: {0}", e.Message);
                 return false;
             }
         }
 
         public override string ToString()
         {
-            return string.Format("LoopCommand: {0}", LayerId);
+            return $"LoopCommand: {LayerId}";
         }
     }
 }

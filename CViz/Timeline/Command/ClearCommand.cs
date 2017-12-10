@@ -1,4 +1,5 @@
 ﻿using System;
+using log4net;
 using StilSoft.CasparCG.AmcpClient.Commands.Mixer;
 using StilSoft.CasparCG.AmcpClient.Commands.Mixer.Common;
 
@@ -6,6 +7,8 @@ namespace CViz.Timeline.Command
 {
     class ClearCommand : CommandBase
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ClearCommand));
+
         public ClearCommand(int layerId) : base(layerId)
         {
         }
@@ -22,14 +25,14 @@ namespace CViz.Timeline.Command
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to execute command: " + e.Message);
+                Log.ErrorFormat("Failed to execute command: {0}", e.Message);
                 return false;
             }
         }
 
         public override string ToString()
         {
-            return string.Format("ClearCommand: {0}", LayerId);
+            return $"ClearCommand: {LayerId}";
         }
     }
 }

@@ -25,5 +25,11 @@ namespace CViz.Control.Tcp
             Channel = "default";
             TimelineSlot = "default";
         }
+
+        public override string ToString()
+        {
+            string paramCount = Parameters?.Count.ToString() ?? "-";
+            return $"Action: {Type} {TimelineFile} data: {InstanceName} {paramCount}";
+        }
     }
 }

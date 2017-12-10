@@ -16,16 +16,16 @@ namespace CViz.Timeline
 
         public static Trigger CreateCue(string name) => new Trigger(TriggerType.Cue, name);
         public static Trigger CreateSetup() => new Trigger(TriggerType.Setup, "Setup");
-        public static Trigger CreateEnd(int layerId) => new Trigger(TriggerType.End, string.Format("{0} End", layerId));
+        public static Trigger CreateEnd(int layerId) => new Trigger(TriggerType.End, $"{layerId} End");
 
         public static Trigger CreateFrame(int layerId, long targetFrame)
         {
-            return new Trigger(TriggerType.Frame, string.Format("{0} F{1}", layerId, targetFrame), layerId, targetFrame);
+            return new Trigger(TriggerType.Frame, $"{layerId} F{targetFrame}", layerId, targetFrame);
         }
 
         public static Trigger CreateLoop(int layerId)
         {
-            Trigger t = new Trigger(TriggerType.End, string.Format("{0} Loop", layerId), layerId, loop: true);
+            Trigger t = new Trigger(TriggerType.End, $"{layerId} Loop", layerId, loop: true);
             return t.WithCommand(new LoopCommand(layerId));
         }
 
@@ -53,7 +53,7 @@ namespace CViz.Timeline
 
         public override string ToString()
         {
-            return string.Format("Trigger: ({0}) {1} {2} {3} Loop:{4}", Name, Type, LayerId, TargetFrame, Loop);
+            return $"Trigger: ({Name}) {Type} {LayerId} {TargetFrame} Loop:{Loop}";
         }
     }
 }

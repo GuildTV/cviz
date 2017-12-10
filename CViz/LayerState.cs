@@ -13,7 +13,7 @@
 
         public override string ToString()
         {
-            return string.Format("LayerState: {0} {1}", VideoName, LastFrame);
+            return $"LayerState: {VideoName} {LastFrame}";
         }
     }
 }

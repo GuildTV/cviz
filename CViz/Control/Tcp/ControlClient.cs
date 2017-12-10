@@ -1,26 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using CViz.Timeline;
+using CViz.Util;
+using log4net;
 using Newtonsoft.Json;
 
 namespace CViz.Control.Tcp
 {
     class ControlClient
     {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(ControlClient));
+
         private readonly TimelineManager _manager;
         private Socket _socket;
         private readonly object _sendLock;
         private bool _connected;
-
-        // Size of receive buffer.  
+        
         private const int BufferSize = 4096;
-        // Receive buffer.  
-        private byte[] _buffer = new byte[BufferSize];
-
-        private StringBuilder _sb = new StringBuilder();
+        private readonly byte[] _buffer = new byte[BufferSize];
+        private readonly StringBuilder _sb = new StringBuilder();
 
         public ControlClient(TimelineManager manager, Socket socket)
         {
@@ -33,40 +35,32 @@ namespace CViz.Control.Tcp
 
         public void Run()
         {
+            Log.InfoFormat("Starting receive for client: {0}", _socket.RemoteEndPoint);
             _socket.BeginReceive(_buffer, 0, BufferSize, 0, ReadCallback, null);
         }
 
         private void ReadCallback(IAsyncResult ar)
         {
-            // Read data from the client socket.   
-            int bytesRead = _socket.EndReceive(ar);
-
-            if (bytesRead <= 0)
+            try
             {
-                Console.WriteLine("0 byte message. closing connection");
-                _socket.Close();
-                return;
+                // Read data from the client socket.   
+                int bytesRead = _socket.EndReceive(ar);
+
+                if (bytesRead <= 0)
+                {
+                    Log.InfoFormat("Got 0 byte message. Closing connection: {0}", _socket.RemoteEndPoint);
+                    _socket.Close();
+                    return;
+                }
+
+                TryParseRemaining(_buffer, 0, bytesRead);
+
+                _socket.BeginReceive(_buffer, 0, BufferSize, 0, ReadCallback, null);
             }
-
-            TryParseRemaining(_buffer, 0, bytesRead);
-
-            // There  might be more data, so store the data received so far.  
-            //            _sb.Append(Encoding.ASCII.GetString(_buffer, 0, bytesRead));
-            //
-            //            // Check for end-of-file tag. If it is not there, read   
-            //            // more data.  
-            //            content = _sb.ToString();
-            //            if (content.IndexOf("\n", StringComparison.InvariantCulture) > -1)
-            //            {
-            //                Console.WriteLine("Read {0} bytes from socket. \n Data : {1}", content.Length, content);
-            //                // Echo the data back to the client.  
-            ////                    Send(handler, content);
-            //            }
-            //            else
-            //            {
-            // Not all data received. Get more.  
-            _socket.BeginReceive(_buffer, 0, BufferSize, 0, ReadCallback, null);
-            //            }
+            catch (Exception e)
+            {
+                Log.ErrorFormat("Receive error: {0}", e.Message);
+            }
         }
 
         private void TryParseRemaining(byte[] arr, int start, int length)
@@ -82,30 +76,38 @@ namespace CViz.Control.Tcp
 
                     TryParseRemaining(arr, i + 1, length);
                     ParseAndRun(res);
-                    Console.WriteLine("Got: " + res);
+                    return;
                 }
             }
 
             // Queue remainder and stop for next time
-            _sb.Append(Encoding.ASCII.GetString(arr, start, length - start));
+            if (length - start > 0)
+                _sb.Append(Encoding.ASCII.GetString(arr, start, length - start));
         }
 
         private void ParseAndRun(string str)
         {
-            ClientAction action = JsonConvert.DeserializeObject<ClientAction>(str);
-            if (action == null || action.Type == ClientAction.ActionType.Unknown)
+            try
             {
-                ReplyPing();
+                ClientAction action = JsonConvert.DeserializeObject<ClientAction>(str.Trim('\n'));
+                if (action == null || action.Type == ClientAction.ActionType.Unknown)
+                {
+                    ReplyPing();
+                }
+                else if (action.Type == ClientAction.ActionType.Query)
+                {
+                    Log.InfoFormat("Received state query");
+                    SendState(_manager.GetStateForTimelineSlot(action.TimelineSlot));
+                }
+                else
+                {
+                    Log.InfoFormat("Received action: {0}", action);
+                    RunAction(action);
+                }
             }
-            else if (action.Type == ClientAction.ActionType.Query)
+            catch (Exception e)
             {
-                Console.WriteLine("Received state query");
-                SendState(_manager.GetStateForTimelineSlot(action.TimelineSlot));
-            }
-            else
-            {
-                Console.WriteLine("Received action: " + action);
-                RunAction(action);
+                Log.ErrorFormat("Action run error: {0}", e.Message);
             }
         }
 
@@ -119,7 +121,7 @@ namespace CViz.Control.Tcp
 
                 case ClientAction.ActionType.Load:
                     if (_manager.LoadTimeline(action.Channel, action.TimelineSlot, action.TimelineFile, action.InstanceName ?? ""))
-                        _manager.StartTimeline(action.TimelineSlot, action.Parameters);
+                        _manager.StartTimeline(action.TimelineSlot, action.Parameters.ToImmutableDictionary());
                     break;
 
                 case ClientAction.ActionType.Cue:
@@ -131,7 +133,7 @@ namespace CViz.Control.Tcp
                     break;
 
                 default:
-                    Console.WriteLine("Unknown action type: " + action.Type);
+                    Log.ErrorFormat("Unknown action type: {0}", action.Type);
                     break;
             }
         }
@@ -144,7 +146,7 @@ namespace CViz.Control.Tcp
                 try
                 {
                     _socket?.Close();
-                    Console.WriteLine("Closing Connection");
+                    Log.InfoFormat("Closing client connection");
                 }
                 catch (IOException)
                 {
@@ -153,7 +155,7 @@ namespace CViz.Control.Tcp
             }
         }
 
-        internal bool SendState(State.State state)
+        internal bool SendState(TimelineState state)
         {
             if (state == null)
                 return true;
@@ -201,10 +203,7 @@ namespace CViz.Control.Tcp
 
         internal void SendCompleteState()
         {
-            IReadOnlyList<State.State> state = _manager.GetCompleteState();
-
-            foreach (State.State s in state)
-                SendState(s);
+            _manager.GetCompleteState().ForEach(s => SendState(s));
         }
     }
 }
