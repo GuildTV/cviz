@@ -123,7 +123,7 @@ namespace CViz.Timeline
             while (IsRunning)
             {
                 lock(_triggersLock) {
-                    if (!_triggers.Remaining.Any() && !_triggers.Active.Any())
+                    if (!_triggers.Remaining.Any() && _triggers.Active.All(t => (t is LoopTrigger)))
                     {
                         if (_previousTriggers != null)
                             SwapBackToMainTimeline();
@@ -198,7 +198,7 @@ namespace CViz.Timeline
                     _triggers.Active.Add(t);
                     
                     // we only want to add up until a manual trigger
-                    if (t is CueTrigger)
+                    if (t is CueTrigger || t is DelayTrigger)
                         break;
                 }
 
@@ -222,7 +222,7 @@ namespace CViz.Timeline
             }
         }
 
-        public void TriggerChild(string name, Dictionary<string, string> parameters) // TODO - use parameters
+        public void TriggerChild(string name, Dictionary<string, string> parameters)
         {
             lock (_triggersLock)
             {
@@ -262,6 +262,7 @@ namespace CViz.Timeline
                 // Promote triggers
                 _previousTriggers = _triggers;
                 _triggers = newTriggerSet;
+                State.InstanceName = name;
 
                 _previousTriggers.Active.RemoveAll(t => t is LoopTrigger);
                 

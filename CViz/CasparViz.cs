@@ -44,7 +44,7 @@ namespace CViz
             {
                 config = JsonConvert.DeserializeObject<Config.Config>(File.ReadAllText("./config.json"));
 
-                if (config.Channels.Length == 0)
+                if (config.Slots.Length == 0)
                     throw new Exception("No channels defined in config file");
 
             } catch (Exception e)

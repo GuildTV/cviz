@@ -29,7 +29,7 @@ namespace CViz.Timeline
 
         public string TimelineSlot { get; }
         public string TimelineFile { get; }
-        public string InstanceName { get; }
+        public string InstanceName { get; set; }
 
         public StateType State { get; private set; }
         public string StateMessage { get; private set; }
@@ -39,7 +39,7 @@ namespace CViz.Timeline
             State = state;
             StateMessage = message;
 
-            _controlInterface.NotifyState(this);
+            _controlInterface?.NotifyState(this);
         }
     }
 }

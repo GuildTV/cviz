@@ -10,11 +10,11 @@ namespace CViz.Config
         public int CasparPort { get; set; }
         public string TemplateDir { get; set; }
 
-        public ChannelConfig[] Channels { get; set; }
+        public SlotConfig[] Slots { get; set; }
 
-        public ChannelConfig GetChannelById(string id)
+        public SlotConfig GetChannelById(string id)
         {
-            return Channels.FirstOrDefault(c => c.Id == id);
+            return Slots.FirstOrDefault(c => c.Id == id);
         }
     }
 }

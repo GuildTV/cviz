@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using CViz.Config;
@@ -36,11 +35,19 @@ namespace CViz
             Log.InfoFormat("Connecting to CasparCG at {0}:{1}", config.CasparHost, config.CasparPort);
             _client = new AmcpConnection(config.CasparHost, config.CasparPort)
             {
-
                 AutoConnect = true,
                 AutoReconnect = true,
                 KeepAliveEnable = true
             };
+
+            foreach (SlotConfig slot in config.Slots)
+            {
+                var state = new TimelineState(null, slot.Id, "", "");
+                var tl = new Timeline.Timeline(slot.Id, _client, slot.Channel, state,
+                    new TimelineSpec("", new List<ITrigger>(), new Dictionary<string, IEnumerable<ITrigger>>()));
+                state.SetState(TimelineState.StateType.Clear);
+                _timelines.Add(slot.Id, tl);
+            }
         }
 
         public void BindInterface(IControlInterface newInterface)
@@ -69,19 +76,14 @@ namespace CViz
         {
             lock (_timelines)
             {
-                if (_timelines.TryGetValue(slot, out Timeline.Timeline timeline) && timeline.IsRunning)
-                {
-                    Log.WarnFormat("Cannot load timeline to {0} with one already running", slot);
-                    return false;
-                }
-
-                if (timeline != null)
-                    _timelines.Remove(slot);
-
-                ChannelConfig channelConfig = _config.GetChannelById(slot);
-                if (channelConfig == null)
+                if (!_timelines.TryGetValue(slot, out Timeline.Timeline timeline))
                 {
                     Log.ErrorFormat("Channel {0} not defined in the config", slot);
+                    return false;
+                }
+                if (timeline.IsRunning)
+                {
+                    Log.WarnFormat("Cannot load timeline to {0} with one already running", slot);
                     return false;
                 }
                 
@@ -97,7 +99,7 @@ namespace CViz
                 }
 
                 TimelineState state = new TimelineState(_controlInterface, slot, filename, instanceId);
-                _timelines[slot] = new Timeline.Timeline(slot, _client, channelConfig.Channel, state, spec);
+                _timelines[slot] = new Timeline.Timeline(slot, _client, timeline.ChannelNumber, state, spec);
 
                 Log.InfoFormat("Timeline {0} ({1}) ready", slot, filename);
 

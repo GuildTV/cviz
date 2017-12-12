@@ -17,7 +17,7 @@ namespace CViz.Timeline.Command
         {
             try
             {
-                new PlayCommand(timeline.ChannelNumber, LayerId).Execute(timeline.Client);
+                new StilSoft.CasparCG.AmcpClient.Commands.Basic.PlayCommand(timeline.ChannelNumber, LayerId).Execute(timeline.Client);
                 LayerState state = timeline.GetLayerState(LayerId);
                 if (state == null)
                     throw new Exception("Missing layer state for loop " + LayerId);

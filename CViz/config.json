@@ -7,7 +7,7 @@
 
   "templateDir": "./timelines/",
 
-  "channels":[
+  "slots":[
     {
       "id": "default",
       "channel": 1
