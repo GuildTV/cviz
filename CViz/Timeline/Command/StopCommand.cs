@@ -1,4 +1,6 @@
-﻿namespace CViz.Timeline.Command
+﻿using CViz.Timeline.Triggers;
+
+namespace CViz.Timeline.Command
 {
     class StopCommand : AmcpCommand
     {
@@ -8,7 +10,7 @@
 
         public override bool Execute(ITimeline timeline)
         {
-            timeline.RemoveAllTriggers(t => t.Loop && t.LayerId == LayerId);
+            timeline.RemoveAllTriggers(t => t is LoopTrigger && t.Layer == LayerId);
 
             return base.Execute(timeline);
         }

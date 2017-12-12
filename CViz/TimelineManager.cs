@@ -7,6 +7,7 @@ using System.Threading;
 using CViz.Config;
 using CViz.Control;
 using CViz.Timeline;
+using CViz.Timeline.Triggers;
 using log4net;
 using StilSoft.CasparCG.AmcpClient;
 
@@ -91,7 +92,7 @@ namespace CViz
                     return false;
                 }
 
-                List<Trigger> sequence;
+                List<ITrigger> sequence;
                 try
                 {
                     sequence = Parser.ParseFile(fullPath);

@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using CViz.Timeline.Command;
+using CViz.Timeline.Triggers;
 using CViz.Util;
 using log4net;
 using StilSoft.CasparCG.AmcpClient;
@@ -16,8 +17,8 @@ namespace CViz.Timeline
         private static readonly ILog Log = LogManager.GetLogger(typeof(Timeline));
 
         private readonly string _timelineId;
-        private readonly List<Trigger> _remainingTriggers;
-        private readonly List<Trigger> _activeTriggers;
+        private readonly List<ITrigger> _remainingTriggers;
+        private readonly List<ITrigger> _activeTriggers;
         private readonly ConcurrentDictionary<int, LayerState> _currentLayerState;
         private readonly HashSet<int> _usedLayers;
 
@@ -26,7 +27,7 @@ namespace CViz.Timeline
 
         private ImmutableDictionary<string, string> _parameterValues;
 
-        public Timeline(string timelineId, AmcpConnection client, int channelId, TimelineState state, List<Trigger> triggers)
+        public Timeline(string timelineId, AmcpConnection client, int channelId, TimelineState state, List<ITrigger> triggers)
         {
             _timelineId = timelineId;
             Client = client;
@@ -34,13 +35,13 @@ namespace CViz.Timeline
             State = state;
             _remainingTriggers = triggers;
 
-            _activeTriggers = new List<Trigger>();
+            _activeTriggers = new List<ITrigger>();
             _currentLayerState = new ConcurrentDictionary<int, LayerState>();
             _usedLayers = new HashSet<int>();
 
             state.SetState(TimelineState.StateType.Ready);
         }
-
+        
         public int ChannelNumber { get; }
         public TimelineState State { get; }
         public AmcpConnection Client { get; }
@@ -57,20 +58,16 @@ namespace CViz.Timeline
         public void SetLayerState(int layerId, LayerState state) => _currentLayerState[layerId] = state;
         public LayerState GetLayerState(int layerId) => _currentLayerState[layerId];
         
-        private Trigger GetCueTrigger()
+        private CueTrigger GetCueTrigger()
         {
             lock (_activeTriggers)
             {
-                Trigger next = _activeTriggers.FirstOrDefault(t => !t.Loop);
-
-                if (next?.Type == TriggerType.Cue)
-                    return next;
-
-                return null;
+                ITrigger next = _activeTriggers.FirstOrDefault(t => !(t is LoopTrigger));
+                return next as CueTrigger;
             }
         }
 
-        private bool AreRequiredParametersDefined(IEnumerable<Trigger> triggers)
+        private bool AreRequiredParametersDefined(IEnumerable<ITrigger> triggers)
         {
             foreach (string fieldName in triggers.SelectMany(t => t.Commands).SelectMany(c => c.Parameters).Distinct())
             {
@@ -83,7 +80,7 @@ namespace CViz.Timeline
             return true;
         }
         
-        public static HashSet<string> GetParameterNames(IEnumerable<Trigger> triggers)
+        public static HashSet<string> GetParameterNames(IEnumerable<ITrigger> triggers)
         {
             return new HashSet<string>(triggers.SelectMany(t => t.Commands).SelectMany(c => c.Parameters));
         }
@@ -101,10 +98,11 @@ namespace CViz.Timeline
             }
 
             // run any setup triggers
-            long setupTriggerCount = _remainingTriggers.Count(t => t.Type == TriggerType.Setup);
+            long setupTriggerCount = _remainingTriggers.Count(t => t is SetupTrigger);
             if (setupTriggerCount > 1)
             {
                 Log.WarnFormat("Timeline can only have one setup trigger");
+                State.SetState(TimelineState.StateType.Error, "Timeline invalid");
                 IsRunning = false;
                 return;
             }
@@ -114,15 +112,9 @@ namespace CViz.Timeline
 
             Log.InfoFormat("Template spans {0} layers", _usedLayers.Count);
 
-            Trigger setupTrigger = _remainingTriggers.FirstOrDefault();
-            if (setupTrigger != null && setupTrigger.Type == TriggerType.Setup)
-            {
-                _remainingTriggers.RemoveAt(0);
-            }
-            else
-            {
-                setupTrigger = null;
-            }
+            ITrigger setupTrigger = _remainingTriggers.OfType<SetupTrigger>().FirstOrDefault();
+            if (setupTrigger != null)
+                _remainingTriggers.Remove(setupTrigger);
 
             State.SetState(TimelineState.StateType.Run);
 
@@ -142,7 +134,7 @@ namespace CViz.Timeline
                         break;
                 }
 
-                Trigger cueTrigger = GetCueTrigger();
+                CueTrigger cueTrigger = GetCueTrigger();
                 if (cueTrigger != null)
                     State.SetState(TimelineState.StateType.Cue, cueTrigger.Name);
                 else
@@ -177,7 +169,9 @@ namespace CViz.Timeline
 
         private void ClearAllUsedLayers()
         {
-            foreach (int l in _usedLayers)
+            List<int> layers = _usedLayers.ToList();
+            
+            foreach (int l in layers)
             {
                 CommandBase c = new ClearCommand(l);
                 c.Execute(this);
@@ -193,17 +187,18 @@ namespace CViz.Timeline
 
                 while (_remainingTriggers.Any())
                 {
-                    Trigger t =_remainingTriggers.FirstOrDefault();
+                    ITrigger t =_remainingTriggers.FirstOrDefault();
                     if (t == null)
                         break;
 
                     moved++;
 
                     _remainingTriggers.RemoveAt(0);
+                    
                     _activeTriggers.Add(t);
                     
                     // we only want to add up until a manual trigger
-                    if (t.Type == TriggerType.Cue)
+                    if (t is CueTrigger)
                         break;
                 }
 
@@ -226,7 +221,7 @@ namespace CViz.Timeline
                 State.SetState(TimelineState.StateType.Run);
 
                 // find trigger to cue
-                Trigger waiting = GetCueTrigger();
+                CueTrigger waiting = GetCueTrigger();
                 if (waiting == null)
                 {
                     Log.InfoFormat("Recevied cue with no trigger to fire: {0}", _timelineId);
@@ -249,20 +244,15 @@ namespace CViz.Timeline
             {
                 if (!IsRunning) return;
 
-                foreach (Trigger t in _activeTriggers)
+                foreach (FrameTrigger t in _activeTriggers.OfType<FrameTrigger>())
                 {
-                    if (t.Type == TriggerType.Setup)
-                        continue;
-
-                    if (t.LayerId != layer)
+                    if (t.Layer != layer)
                         continue;
 
                     // determine the frame we are aiming for
                     long targetFrame = totalFrames;
-                    if (t.Type != TriggerType.End)
-                    {
+                    if (t.TargetFrame == -1)
                         targetFrame = t.TargetFrame;
-                    }
 
                     if (!_currentLayerState.TryGetValue(layer, out LayerState state))
                     {
@@ -313,9 +303,9 @@ namespace CViz.Timeline
                     return;
 
                 // find trigger to cue
-                Trigger next = _activeTriggers.FirstOrDefault(t => !t.Loop);
+                DelayTrigger next = _activeTriggers.FirstOrDefault(t => !(t is LoopTrigger)) as DelayTrigger;
 
-                if (next?.Type != TriggerType.Delay)
+                if (next == null)
                     return;
 
                 // If the counter hasnt started, then set it as starting on the previous frame
@@ -335,7 +325,7 @@ namespace CViz.Timeline
             }
         }
 
-        private void ExecuteTrigger(Trigger trigger)
+        private void ExecuteTrigger(ITrigger trigger)
         {
             lock (_activeTriggers)
             {
@@ -345,7 +335,7 @@ namespace CViz.Timeline
                 _activeTriggers.Remove(trigger);
             }
         }
-
+        
         public string GetParameterValue(string name, bool escape)
         {
             if (name.IndexOf("@", StringComparison.InvariantCulture) == 0)
@@ -378,13 +368,13 @@ namespace CViz.Timeline
         }
 
 
-        public void AddTrigger(Trigger t)
+        public void AddTrigger(ITrigger t)
         {
             lock (_activeTriggers)
                 _activeTriggers.Add(t);
         }
 
-        public void RemoveAllTriggers(Predicate<Trigger> predicate)
+        public void RemoveAllTriggers(Predicate<ITrigger> predicate)
         {
             lock (_activeTriggers)
                 _activeTriggers.RemoveAll(predicate);

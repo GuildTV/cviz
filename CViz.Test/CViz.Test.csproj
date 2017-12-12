@@ -54,6 +54,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="Resources\Timelines\dev.tl">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Resources\Timelines\elections-2017\candidateBoard.tl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using CViz.Timeline;
+using CViz.Timeline.Triggers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CViz.Test
@@ -8,6 +9,13 @@ namespace CViz.Test
     [TestClass]
     public class TestTimelines
     {
+        [TestMethod]
+        public void TestDev()
+        {
+            LoadTimeline("dev");
+        }
+
+
         [TestMethod]
         public void TestElections2017CandidateBoard()
         {
@@ -85,7 +93,7 @@ namespace CViz.Test
 
         private void LoadTimeline(string filename)
         {
-            List<Trigger> triggers = Parser.ParseFile(Path.Combine("Resources", "Timelines", filename + TimelineManager.TimelineExt));
+            List<ITrigger> triggers = Parser.ParseFile(Path.Combine("Resources", "Timelines", filename + TimelineManager.TimelineExt));
             Assert.IsNotNull(triggers);
             Assert.AreNotEqual(0, triggers.Count);
         }

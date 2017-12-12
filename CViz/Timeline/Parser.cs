@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using CViz.Timeline.Command;
+using CViz.Timeline.Triggers;
 using log4net;
 
 namespace CViz.Timeline
@@ -21,11 +23,12 @@ namespace CViz.Timeline
         private const string StopCommandPattern = "^STOP";
         private const string LoopCommandPattern = "^LOOP";
         private const string ClearCommandPattern = "^CLEAR";
+        private const string MixerCommitCommandPattern = "^MIXER COMMIT";
 
 
-        private List<Trigger> _triggers = new List<Trigger>();
+        private List<ITrigger> _triggers = new List<ITrigger>();
 
-        private Trigger _currentTrigger;
+        private ITrigger _currentTrigger;
 
         private readonly StreamReader _reader;
 
@@ -87,28 +90,28 @@ namespace CViz.Timeline
             }
         }
 
-        private static Trigger ParseTrigger(String line)
+        private static ITrigger ParseTrigger(String line)
         {
             Match matcher = Regex.Match(line, SetupTriggerPattern);
             if (matcher.Success)
-                return Trigger.CreateSetup();
+                return new SetupTrigger();
 
             matcher = Regex.Match(line, CueTriggerPattern);
             if (matcher.Success)
-                return Trigger.CreateCue(matcher.Groups[1].Value);
+                return new CueTrigger(matcher.Groups[1].Value);
 
             matcher = Regex.Match(line, EndTriggerPattern);
             if (matcher.Success)
-                return Trigger.CreateEnd(int.Parse(matcher.Groups[1].Value));
+                return new EndTrigger(int.Parse(matcher.Groups[1].Value));
 
             matcher = Regex.Match(line, FrameTriggerPattern);
             if (matcher.Success)
-                return Trigger.CreateFrame(int.Parse(matcher.Groups[2].Value), long.Parse(matcher.Groups[1].Value));
+                return new FrameTrigger(int.Parse(matcher.Groups[2].Value), long.Parse(matcher.Groups[1].Value));
             
             matcher = Regex.Match(line, DelayTriggerPattern);
             if (matcher.Success)
-                return Trigger.CreateDelay(int.Parse(matcher.Groups[1].Value));
-
+                return new DelayTrigger(int.Parse(matcher.Groups[1].Value));
+            
             return null;
         }
 
@@ -137,6 +140,10 @@ namespace CViz.Timeline
             if (matcher.Success)
                 return new ClearCommand(layerId);
 
+            matcher = Regex.Match(line, MixerCommitCommandPattern);
+            if (matcher.Success)
+                return new MixerCommitCommand(layerId);
+
             return new AmcpCommand(layerId, command);
         }
 
@@ -146,7 +153,7 @@ namespace CViz.Timeline
             return new HttpCommand(parts[0], parts[1]);
         }
 
-        public static List<Trigger> ParseFile(string path)
+        public static List<ITrigger> ParseFile(string path)
         {
             try
             {
@@ -163,7 +170,7 @@ namespace CViz.Timeline
             }
         }
 
-        private static List<Trigger> ParseStream(StreamReader reader)
+        private static List<ITrigger> ParseStream(StreamReader reader)
         {
             Parser parser = new Parser(reader);
             parser.Parse();

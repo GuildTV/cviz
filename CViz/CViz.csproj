@@ -78,6 +78,7 @@
     <Compile Include="OSCWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Timeline\Command\HttpCommand.cs" />
+    <Compile Include="Timeline\Command\MixerCommitCommand.cs" />
     <Compile Include="Timeline\TimelineState.cs" />
     <Compile Include="TimelineManager.cs" />
     <Compile Include="Timeline\Command\AmcpCommand.cs" />
@@ -88,8 +89,13 @@
     <Compile Include="Timeline\Command\StopCommand.cs" />
     <Compile Include="Timeline\Parser.cs" />
     <Compile Include="Timeline\Timeline.cs" />
-    <Compile Include="Timeline\Trigger.cs" />
-    <Compile Include="Timeline\TriggerType.cs" />
+    <Compile Include="Timeline\Triggers\CueTrigger.cs" />
+    <Compile Include="Timeline\Triggers\DelayTrigger.cs" />
+    <Compile Include="Timeline\Triggers\EndTrigger.cs" />
+    <Compile Include="Timeline\Triggers\FrameTrigger.cs" />
+    <Compile Include="Timeline\Triggers\ITrigger.cs" />
+    <Compile Include="Timeline\Triggers\LoopTrigger.cs" />
+    <Compile Include="Timeline\Triggers\SetupTrigger.cs" />
     <Compile Include="Util\ListExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using System;
+using CViz.Timeline.Triggers;
 using log4net;
 using StilSoft.CasparCG.AmcpClient.Commands.Basic;
 
@@ -22,7 +23,7 @@ namespace CViz.Timeline.Command
                     throw new Exception("Missing layer state for loop " + LayerId);
 
                 new LoadBgCommand(timeline.ChannelNumber, LayerId, state.VideoName).Execute(timeline.Client);
-                timeline.AddTrigger(Trigger.CreateLoop(LayerId));
+                timeline.AddTrigger(new LoopTrigger(LayerId));
                 
                 Log.InfoFormat("Looping: {0}", state);
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using CViz.Timeline;
+using CViz.Timeline.Triggers;
 using StilSoft.CasparCG.AmcpClient;
 
 namespace CViz
@@ -14,7 +14,7 @@ namespace CViz
         
         string GetParameterValue(string fieldName, bool escape);
 
-        void AddTrigger(Trigger t);
-        void RemoveAllTriggers(Predicate<Trigger> predicate);
+        void AddTrigger(ITrigger t);
+        void RemoveAllTriggers(Predicate<ITrigger> predicate);
     }
 }
