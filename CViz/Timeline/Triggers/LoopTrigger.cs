@@ -3,18 +3,19 @@ using CViz.Timeline.Command;
 
 namespace CViz.Timeline.Triggers
 {
-    class LoopTrigger : ITrigger
+    class LoopTrigger : EndTrigger
     {
-        public int Layer { get; }
-        public ImmutableList<CommandBase> Commands { get; }
-
-        public LoopTrigger(int layer, ImmutableList<CommandBase> commands = null)
+        private static ImmutableList<CommandBase>  GetCommands(int layer, ImmutableList<CommandBase> cmds)
         {
-            Layer = layer;
-            Commands = commands ?? ImmutableList<CommandBase>.Empty;
+            cmds = cmds ?? ImmutableList<CommandBase>.Empty;
+            return cmds.Add(new LoopCommand(layer));
         }
 
-        public ITrigger WithCommand(CommandBase cmd)
+        public LoopTrigger(int layer, ImmutableList<CommandBase> commands = null): base(layer, GetCommands(layer, commands))
+        {
+        }
+
+        public override ITrigger WithCommand(CommandBase cmd)
         {
             return new LoopTrigger(Layer, Commands.Add(cmd));
         }

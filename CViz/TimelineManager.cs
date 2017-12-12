@@ -65,84 +65,77 @@ namespace CViz
             }
         }
         
-        public bool LoadTimeline(string channelId, string timelineSlot, string filename, string instanceId)
+        public bool LoadTimeline(string slot, string filename, string instanceId)
         {
             lock (_timelines)
             {
-                if (_timelines.TryGetValue(timelineSlot, out Timeline.Timeline timeline) && timeline.IsRunning)
+                if (_timelines.TryGetValue(slot, out Timeline.Timeline timeline) && timeline.IsRunning)
                 {
-                    Log.WarnFormat("Cannot load timeline to {0} with one already running", timelineSlot);
+                    Log.WarnFormat("Cannot load timeline to {0} with one already running", slot);
                     return false;
                 }
 
                 if (timeline != null)
-                    _timelines.Remove(timelineSlot);
+                    _timelines.Remove(slot);
 
-                ChannelConfig channelConfig = _config.GetChannelById(channelId);
+                ChannelConfig channelConfig = _config.GetChannelById(slot);
                 if (channelConfig == null)
                 {
-                    Log.ErrorFormat("Channel {0} not defined in the config", channelId);
+                    Log.ErrorFormat("Channel {0} not defined in the config", slot);
                     return false;
                 }
                 
-                string fullPath = Path.GetFullPath(Path.Combine(_config.TemplateDir, filename + TimelineExt));
-                if (!File.Exists(fullPath))
-                {
-                    Log.ErrorFormat("Cannot find new timeline file: {0}", fullPath);
-                    return false;
-                }
-
-                List<ITrigger> sequence;
+                TimelineSpec spec;
                 try
                 {
-                    sequence = Parser.ParseFile(fullPath);
+                    spec = Parser.ParseFile(_config.TemplateDir, filename);
                 }
                 catch (Exception)
                 {
-                    Log.ErrorFormat("Faield to parse timeline file: {0}", fullPath);
+                    Log.ErrorFormat("Faield to load timeline file: {0}", filename);
                     return false;
                 }
 
-                TimelineState state = new TimelineState(_controlInterface, timelineSlot, filename, instanceId);
-                _timelines[timelineSlot] = new Timeline.Timeline(timelineSlot, _client, channelConfig.Channel, state, sequence);
+                TimelineState state = new TimelineState(_controlInterface, slot, filename, instanceId);
+                _timelines[slot] = new Timeline.Timeline(slot, _client, channelConfig.Channel, state, spec);
 
-                Log.InfoFormat("Timeline {0} ({1}) ready", timelineSlot, filename);
+                Log.InfoFormat("Timeline {0} ({1}) ready", slot, filename);
 
                 return true;
             }
         }
 
-        public bool StartTimeline(string timelineId, ImmutableDictionary<string, string> parameters)
+        public bool StartTimeline(string slot, ImmutableDictionary<string, string> parameters)
         {
             lock (_timelines)
             {
-                Timeline.Timeline timeline = _timelines[timelineId];
+                Timeline.Timeline timeline = _timelines[slot];
                 if (timeline == null || timeline.IsRunning)
                     return false;
 
                 timeline.SetParameterValues(parameters);
 
-                Log.InfoFormat("Starting timeline {0}", timelineId);
+                Log.InfoFormat("Starting timeline {0}", slot);
 
                 new Thread(timeline.Run).Start();
                 return true;
             }
         }
 
-        public void KillTimeline(string timelineId)
+        public void KillTimeline(string slot)
         {
             lock (_timelines)
             {
-                if (_timelines.TryGetValue(timelineId, out var timeline))
+                if (_timelines.TryGetValue(slot, out var timeline))
                     timeline.Kill();
             }
         }
 
-        public void TriggerCue(string timelineId)
+        public void TriggerCue(string slot)
         {
             lock (_timelines)
             {
-                if (_timelines.TryGetValue(timelineId, out var timeline))
+                if (_timelines.TryGetValue(slot, out var timeline))
                     timeline.TriggerCue();
             }
         }
@@ -166,6 +159,15 @@ namespace CViz
                 {
                     timeline.TriggerOnChannelFrame(port, frame);
                 }
+            }
+        }
+
+        public void TriggerChild(string timelineId, string name, Dictionary<string, string> parameters)
+        {
+            lock (_timelines)
+            {
+                if (_timelines.TryGetValue(timelineId, out var timeline))
+                    timeline.TriggerChild(name, parameters);
             }
         }
     }

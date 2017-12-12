@@ -14,7 +14,8 @@ namespace CViz.Timeline
         private static readonly ILog Log = LogManager.GetLogger(typeof(Parser));
 
         private const string SetupTriggerPattern = "^@ \\{$";
-        private const string CueTriggerPattern = "^@Q (.*) \\{$";
+        private const string CueTriggerPattern = "^@(Q|CUE) (.*) \\{$";
+        private const string RunChildOrCueTriggerPattern = "^@RUNCHILDORCUE ([^\\s]*) (.*) \\{$";
         private const string EndTriggerPattern = "^@END ([0-9]+) \\{$";
         private const string FrameTriggerPattern = "^@([0-9]+) ([0-9]+) \\{$";
         private const string DelayTriggerPattern = "^@DELAY ([0-9]+) \\{$";
@@ -25,9 +26,7 @@ namespace CViz.Timeline
         private const string ClearCommandPattern = "^CLEAR";
         private const string MixerCommitCommandPattern = "^MIXER COMMIT";
 
-
         private List<ITrigger> _triggers = new List<ITrigger>();
-
         private ITrigger _currentTrigger;
 
         private readonly StreamReader _reader;
@@ -37,15 +36,15 @@ namespace CViz.Timeline
             _reader = reader;
         }
 
-        private void Parse()
+        private IReadOnlyList<ITrigger> Parse()
         {
             try
             {
                 string line;
                 while ((line = _reader.ReadLine()) != null)
-                {
                     ParseLine(line);
-                }
+
+                return _triggers;
             }
             catch (IOException)
             {
@@ -98,7 +97,11 @@ namespace CViz.Timeline
 
             matcher = Regex.Match(line, CueTriggerPattern);
             if (matcher.Success)
-                return new CueTrigger(matcher.Groups[1].Value);
+                return new CueTrigger(matcher.Groups[2].Value);
+
+            matcher = Regex.Match(line, RunChildOrCueTriggerPattern);
+            if (matcher.Success)
+                return new RunChildOrCueTrigger(matcher.Groups[1].Value, matcher.Groups[2].Value);
 
             matcher = Regex.Match(line, EndTriggerPattern);
             if (matcher.Success)
@@ -124,23 +127,23 @@ namespace CViz.Timeline
             int layerId = int.Parse(parts[0]);
             string command = parts[1];
 
-            Match matcher = Regex.Match(line, LoadCommandPattern);
+            Match matcher = Regex.Match(command, LoadCommandPattern);
             if (matcher.Success)
                 return new LoadCommand(layerId, command, matcher.Groups[2].Value);
 
-            matcher = Regex.Match(line, StopCommandPattern);
+            matcher = Regex.Match(command, StopCommandPattern);
             if (matcher.Success)
                 return new StopCommand(layerId, command);
 
-            matcher = Regex.Match(line, LoopCommandPattern);
+            matcher = Regex.Match(command, LoopCommandPattern);
             if (matcher.Success)
                 return new LoopCommand(layerId);
 
-            matcher = Regex.Match(line, ClearCommandPattern);
+            matcher = Regex.Match(command, ClearCommandPattern);
             if (matcher.Success)
                 return new ClearCommand(layerId);
 
-            matcher = Regex.Match(line, MixerCommitCommandPattern);
+            matcher = Regex.Match(command, MixerCommitCommandPattern);
             if (matcher.Success)
                 return new MixerCommitCommand(layerId);
 
@@ -153,14 +156,41 @@ namespace CViz.Timeline
             return new HttpCommand(parts[0], parts[1]);
         }
 
-        public static List<ITrigger> ParseFile(string path)
+        public static TimelineSpec ParseFile(string basePath, string name)
         {
             try
             {
-                using (new StreamReader(path))
+                string mainPath = Path.Combine(basePath, name + TimelineManager.TimelineExt);
+                IReadOnlyList<ITrigger> mainTimeline;
+                using (var reader = new StreamReader(mainPath))
                 {
-                    return ParseStream(new StreamReader(path));
+                    Parser parser = new Parser(reader);
+                    mainTimeline = parser.Parse();
                 }
+
+                if (mainTimeline.OfType<SetupTrigger>().Count() > 1)
+                    throw new Exception("Timeline can only have one setup trigger");
+
+                IReadOnlyList<string> childNames = mainTimeline.OfType<RunChildOrCueTrigger>().Select(c => c.TimelineName).Distinct().ToList();
+                Dictionary<string, IEnumerable<ITrigger>> childTimelines = childNames.ToDictionary(n => n, n =>
+                {
+                    string childPath = Path.Combine(basePath, $"{name}.{n}{TimelineManager.TimelineExt}");
+                    using (var reader = new StreamReader(childPath))
+                    {
+                        Parser parser = new Parser(reader);
+                        IReadOnlyList<ITrigger> triggers = parser.Parse();
+
+                        if (triggers.Any(t => t is RunChildOrCueTrigger))
+                            throw new Exception("Cannot have nexted child timelines");
+
+                        if (triggers.OfType<SetupTrigger>().Count() > 1)
+                            throw new Exception("Timeline can only have one setup trigger");
+
+                        return triggers.AsEnumerable();
+                    }
+                });
+
+                return new TimelineSpec(name, mainTimeline, childTimelines);
             }
             catch (IOException e)
             {
@@ -168,13 +198,6 @@ namespace CViz.Timeline
                 Log.ErrorFormat(e.StackTrace);
                 throw;
             }
-        }
-
-        private static List<ITrigger> ParseStream(StreamReader reader)
-        {
-            Parser parser = new Parser(reader);
-            parser.Parse();
-            return parser._triggers;
         }
     }
 }

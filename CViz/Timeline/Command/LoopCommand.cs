@@ -21,6 +21,7 @@ namespace CViz.Timeline.Command
                 LayerState state = timeline.GetLayerState(LayerId);
                 if (state == null)
                     throw new Exception("Missing layer state for loop " + LayerId);
+                state.LastFrame = 0;
 
                 new LoadBgCommand(timeline.ChannelNumber, LayerId, state.VideoName).Execute(timeline.Client);
                 timeline.AddTrigger(new LoopTrigger(LayerId));

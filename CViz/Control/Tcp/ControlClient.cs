@@ -120,12 +120,16 @@ namespace CViz.Control.Tcp
                     break;
 
                 case ClientAction.ActionType.Load:
-                    if (_manager.LoadTimeline(action.Channel, action.TimelineSlot, action.TimelineFile, action.InstanceName ?? ""))
+                    if (_manager.LoadTimeline(action.TimelineSlot, action.TimelineFile, action.InstanceName ?? ""))
                         _manager.StartTimeline(action.TimelineSlot, action.Parameters.ToImmutableDictionary());
                     break;
 
                 case ClientAction.ActionType.Cue:
                     _manager.TriggerCue(action.TimelineSlot);
+                    break;
+
+                case ClientAction.ActionType.RunChild:
+                    _manager.TriggerChild(action.TimelineSlot, action.InstanceName, action.Parameters);
                     break;
 
                 case ClientAction.ActionType.Query:

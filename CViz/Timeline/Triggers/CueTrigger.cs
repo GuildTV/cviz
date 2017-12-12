@@ -15,9 +15,9 @@ namespace CViz.Timeline.Triggers
             Commands = commands ?? ImmutableList<CommandBase>.Empty;
         }
 
-        public ITrigger WithCommand(CommandBase cmd)
+        public virtual ITrigger WithCommand(CommandBase cmd)
         {
-            return new SetupTrigger(Commands.Add(cmd));
+            return new CueTrigger(Name, Commands.Add(cmd));
         }
 
         public override string ToString()

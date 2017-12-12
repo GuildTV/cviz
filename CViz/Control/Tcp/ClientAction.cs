@@ -9,11 +9,11 @@ namespace CViz.Control.Tcp
             Unknown,
             Load,
             Cue,
+            RunChild,
             Kill,
-            Query
+            Query,
         }
 
-        public string Channel { get; set; }
         public string TimelineSlot { get; set; }
         public ActionType Type { get; set; }
         public string TimelineFile { get; set; }
@@ -22,14 +22,13 @@ namespace CViz.Control.Tcp
 
         public ClientAction()
         {
-            Channel = "default";
             TimelineSlot = "default";
         }
 
         public override string ToString()
         {
             string paramCount = Parameters?.Count.ToString() ?? "-";
-            return $"Action: {Type} {TimelineFile} data: {InstanceName} {paramCount}";
+            return $"Action: {TimelineSlot} {Type} {TimelineFile} data: {InstanceName} {paramCount}";
         }
     }
 }

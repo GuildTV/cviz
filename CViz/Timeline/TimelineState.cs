@@ -9,6 +9,7 @@ namespace CViz.Timeline
             Error,
             Ready,
             Cue,
+            CueOrChild,
             Run,
             Clear,
         }
