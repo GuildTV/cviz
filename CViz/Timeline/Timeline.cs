@@ -21,15 +21,12 @@ namespace CViz.Timeline
         private readonly ConcurrentDictionary<int, LayerState> _currentLayerState;
         private readonly HashSet<int> _usedLayers;
 
-        private List<ITrigger> _previousRemainingTriggers;
-        private List<ITrigger> _previousActiveTriggers;
-        private readonly List<ITrigger> _remainingTriggers;
-        private readonly List<ITrigger> _activeTriggers;
-
+        private TimelineTriggerSet _previousTriggers;
+        private TimelineTriggerSet _triggers;
+        private readonly object _triggersLock;
+        
         private int _portId;
         private long _portFirstFrame;
-
-        private ImmutableDictionary<string, string> _parameterValues;
 
         public Timeline(string timelineId, AmcpConnection client, int channelId, TimelineState state, TimelineSpec spec)
         {
@@ -38,9 +35,10 @@ namespace CViz.Timeline
             ChannelNumber = channelId;
             State = state;
             _spec = spec;
-            _remainingTriggers = spec.Triggers.ToList();
 
-            _activeTriggers = new List<ITrigger>();
+            _triggersLock = new object();
+            _triggers = new TimelineTriggerSet(spec.Triggers.ToList(), new List<ITrigger>(), null);
+
             _currentLayerState = new ConcurrentDictionary<int, LayerState>();
             _usedLayers = new HashSet<int>();
 
@@ -65,18 +63,18 @@ namespace CViz.Timeline
         
         private CueTrigger GetCueTrigger()
         {
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
-                ITrigger next = _activeTriggers.FirstOrDefault(t => !(t is LoopTrigger));
+                ITrigger next = _triggers.Active.FirstOrDefault(t => !(t is LoopTrigger));
                 return next as CueTrigger;
             }
         }
 
-        private bool AreRequiredParametersDefined(IEnumerable<ITrigger> triggers)
+        private bool AreRequiredParametersDefined(TimelineTriggerSet triggerSet)
         {
-            foreach (string fieldName in triggers.SelectMany(t => t.Commands).SelectMany(c => c.Parameters).Distinct())
+            foreach (string fieldName in triggerSet.Remaining.SelectMany(t => t.Commands).SelectMany(c => c.Parameters).Distinct())
             {
-                if (fieldName.IndexOf("@", StringComparison.InvariantCulture) == 0 && !_parameterValues.ContainsKey(fieldName.Substring(1)))
+                if (fieldName.IndexOf("@", StringComparison.InvariantCulture) == 0 && !triggerSet.ParameterValues.ContainsKey(fieldName.Substring(1)))
                 {
                     State.SetState(TimelineState.StateType.Error, "Missing required parameter: " + fieldName);
                     return false;
@@ -96,20 +94,20 @@ namespace CViz.Timeline
             IsRunning = true;
 
             // check all required parameters are defined
-            if (!AreRequiredParametersDefined(_remainingTriggers))
+            if (!AreRequiredParametersDefined(_triggers))
             {
                 IsRunning = false;
                 return;
             }
 
             // collect the list of layers being altered
-            _usedLayers.AddRange(_remainingTriggers.SelectMany(t => t.Commands).Select(c => c.LayerId).Where(l => l > 0));
+            _usedLayers.AddRange(_triggers.Remaining.SelectMany(t => t.Commands).Select(c => c.LayerId).Where(l => l > 0));
 
             Log.InfoFormat("Template spans {0} layers", _usedLayers.Count);
 
-            ITrigger setupTrigger = _remainingTriggers.OfType<SetupTrigger>().FirstOrDefault();
+            ITrigger setupTrigger = _triggers.Remaining.OfType<SetupTrigger>().FirstOrDefault();
             if (setupTrigger != null)
-                _remainingTriggers.Remove(setupTrigger);
+                _triggers.Remaining.Remove(setupTrigger);
 
             State.SetState(TimelineState.StateType.Run);
 
@@ -124,10 +122,10 @@ namespace CViz.Timeline
 
             while (IsRunning)
             {
-                lock(_activeTriggers) {
-                    if (!_remainingTriggers.Any() && !_activeTriggers.Any())
+                lock(_triggersLock) {
+                    if (!_triggers.Remaining.Any() && !_triggers.Active.Any())
                     {
-                        if (_previousRemainingTriggers != null && _previousActiveTriggers != null)
+                        if (_previousTriggers != null)
                             SwapBackToMainTimeline();
                         else
                             break;
@@ -157,9 +155,8 @@ namespace CViz.Timeline
             if (KillNow)
             {
                 State.SetState(TimelineState.StateType.Error, "Killed");
-                _remainingTriggers.Clear();
-                // ReSharper disable once InconsistentlySynchronizedField
-                _activeTriggers.Clear();
+                _triggers.Remaining.Clear();
+                _triggers.Active.Clear();
             }
 
             //ensure everything has been reset
@@ -184,28 +181,28 @@ namespace CViz.Timeline
 
         private bool PromoteTriggersToActive()
         {
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
                 int moved = 0;
 
-                while (_remainingTriggers.Any())
+                while (_triggers.Remaining.Any())
                 {
-                    ITrigger t =_remainingTriggers.FirstOrDefault();
+                    ITrigger t = _triggers.Remaining.FirstOrDefault();
                     if (t == null)
                         break;
 
                     moved++;
 
-                    _remainingTriggers.RemoveAt(0);
-                    
-                    _activeTriggers.Add(t);
+                    _triggers.Remaining.RemoveAt(0);
+
+                    _triggers.Active.Add(t);
                     
                     // we only want to add up until a manual trigger
                     if (t is CueTrigger)
                         break;
                 }
 
-                if (moved == 0 && _previousRemainingTriggers != null)
+                if (moved == 0 && _previousTriggers != null)
                 {
                     SwapBackToMainTimeline();
                     return true;
@@ -217,15 +214,17 @@ namespace CViz.Timeline
 
         private void SwapBackToMainTimeline()
         {
-            _remainingTriggers.AddRange(_previousRemainingTriggers);
-            _activeTriggers.AddRange(_previousActiveTriggers);
-            _previousActiveTriggers = null;
-            _previousRemainingTriggers = null;
+            lock (_triggersLock)
+            {
+                _previousTriggers.Active.AddRange(_triggers.Active.Where(t => t is LoopTrigger));
+                _triggers = _previousTriggers;
+                _previousTriggers = null;
+            }
         }
 
         public void TriggerChild(string name, Dictionary<string, string> parameters) // TODO - use parameters
         {
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
                 if (!IsRunning)
                 {
@@ -250,26 +249,28 @@ namespace CViz.Timeline
                     return;
                 }
 
+                var newTriggerSet = new TimelineTriggerSet(newTriggers.ToList(),
+                    _triggers.Active.Where(t => t is LoopTrigger).ToList(), parameters.ToImmutableDictionary());
+
                 // check all required parameters are defined
-                if (!AreRequiredParametersDefined(_remainingTriggers)) // TODO fix this usage! _parameters havent been upated yet
+                if (!AreRequiredParametersDefined(newTriggerSet)) // TODO fix this usage! _parameters havent been upated yet
                 {
                     Log.WarnFormat("Not all parameters to child timeline are defined. Ignoring run");
                     return;
                 }
 
                 // Promote triggers
-                _previousActiveTriggers = _activeTriggers.Where(t => !(t is LoopTrigger)).ToList();
-                _activeTriggers.RemoveAll(t => !(t is LoopTrigger));
-                _previousRemainingTriggers = _remainingTriggers.ToList();
-                _remainingTriggers.Clear();
-                _remainingTriggers.AddRange(newTriggers);
+                _previousTriggers = _triggers;
+                _triggers = newTriggerSet;
+
+                _previousTriggers.Active.RemoveAll(t => t is LoopTrigger);
                 
                 // collect the list of layers being altered
-                _usedLayers.AddRange(_remainingTriggers.SelectMany(t => t.Commands).Select(c => c.LayerId).Where(l => l > 0));
+                _usedLayers.AddRange(_triggers.Remaining.SelectMany(t => t.Commands).Select(c => c.LayerId).Where(l => l > 0));
 
-                ITrigger setupTrigger = _remainingTriggers.OfType<SetupTrigger>().FirstOrDefault();
+                ITrigger setupTrigger = _triggers.Remaining.OfType<SetupTrigger>().FirstOrDefault();
                 if (setupTrigger != null)
-                    _remainingTriggers.Remove(setupTrigger);
+                    _triggers.Remaining.Remove(setupTrigger);
 
                 State.SetState(TimelineState.StateType.Run);
 
@@ -281,13 +282,12 @@ namespace CViz.Timeline
                 // Run the setup
                 if (setupTrigger != null)
                     ExecuteTrigger(setupTrigger);
-
             }
         }
 
         public void TriggerCue()
         {
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
                 if (!IsRunning)
                 {
@@ -319,11 +319,11 @@ namespace CViz.Timeline
 
         internal void TriggerOnVideoFrame(int layer, long frame, long totalFrames)
         {
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
                 if (!IsRunning) return;
 
-                foreach (FrameTrigger t in _activeTriggers.OfType<FrameTrigger>().ToList())
+                foreach (FrameTrigger t in _triggers.Active.OfType<FrameTrigger>().ToList())
                 {
                     if (t.Layer != layer)
                         continue;
@@ -377,13 +377,13 @@ namespace CViz.Timeline
             if (frame <= _portFirstFrame)
                 return;
 
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
                 if (!IsRunning)
                     return;
 
                 // find trigger to cue
-                DelayTrigger next = _activeTriggers.FirstOrDefault(t => !(t is LoopTrigger)) as DelayTrigger;
+                DelayTrigger next = _triggers.Active.FirstOrDefault(t => !(t is LoopTrigger)) as DelayTrigger;
                 if (next == null)
                     return;
 
@@ -406,12 +406,12 @@ namespace CViz.Timeline
 
         private void ExecuteTrigger(ITrigger trigger)
         {
-            lock (_activeTriggers)
+            lock (_triggersLock)
             {
                 // TODO - may want to look into using a thread to do the sending/commands, as they block until they get a response
                 // may cause issues with integrity of remainingTriggers lists though
                 trigger.Commands.ForEach(c => c.Execute(this));
-                _activeTriggers.Remove(trigger);
+                _triggers.Active.Remove(trigger);
             }
         }
         
@@ -419,7 +419,7 @@ namespace CViz.Timeline
         {
             if (name.IndexOf("@", StringComparison.InvariantCulture) == 0)
             {
-                if (!_parameterValues.TryGetValue(name.Substring(1), out string param))
+                if (!_triggers.ParameterValues.TryGetValue(name.Substring(1), out string param))
                     return name;
 
                 if (escape)
@@ -440,23 +440,20 @@ namespace CViz.Timeline
 
         internal void SetParameterValues(ImmutableDictionary<string, string> parameterValues)
         {
-            if (_parameterValues != null)
-                return;
-
-            _parameterValues = parameterValues ?? ImmutableDictionary<string, string>.Empty;
+            _triggers.SetParameters(parameterValues);
         }
 
 
         public void AddTrigger(ITrigger t)
         {
-            lock (_activeTriggers)
-                _activeTriggers.Add(t);
+            lock (_triggersLock)
+                _triggers.Active.Add(t);
         }
 
         public void RemoveAllTriggers(Predicate<ITrigger> predicate)
         {
-            lock (_activeTriggers)
-                _activeTriggers.RemoveAll(predicate);
+            lock (_triggersLock)
+                _triggers.Active.RemoveAll(predicate);
         }
         
     }

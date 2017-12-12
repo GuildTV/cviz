@@ -90,6 +90,7 @@
     <Compile Include="Timeline\Command\StopCommand.cs" />
     <Compile Include="Timeline\Parser.cs" />
     <Compile Include="Timeline\Timeline.cs" />
+    <Compile Include="Timeline\TimelineTriggerSet.cs" />
     <Compile Include="Timeline\Triggers\CueTrigger.cs" />
     <Compile Include="Timeline\Triggers\DelayTrigger.cs" />
     <Compile Include="Timeline\Triggers\EndTrigger.cs" />
