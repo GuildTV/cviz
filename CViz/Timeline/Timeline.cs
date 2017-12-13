@@ -249,7 +249,7 @@ namespace CViz.Timeline
                     return;
                 }
 
-                var newTriggerSet = new TimelineTriggerSet(newTriggers.ToList(),
+                var newTriggerSet = new TimelineTriggerSet(newTriggers.Select(t => t.Clone()).ToList(),
                     _triggers.Active.Where(t => t is LoopTrigger).ToList(), parameters.ToImmutableDictionary());
 
                 // check all required parameters are defined

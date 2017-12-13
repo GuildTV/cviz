@@ -24,5 +24,10 @@ namespace CViz.Timeline.Triggers
         {
             return $"LoopTrigger: {Layer}";
         }
+
+        public override ITrigger Clone()
+        {
+            return new LoopTrigger(Layer, Commands);
+        }
     }
 }

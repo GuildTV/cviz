@@ -21,5 +21,10 @@ namespace CViz.Timeline.Triggers
         {
             return $"RunChildOrCueTrigger: {Name} Child: {TimelineName}";
         }
+
+        public override ITrigger Clone()
+        {
+            return new RunChildOrCueTrigger(TimelineName, Name, Commands);
+        }
     }
 }

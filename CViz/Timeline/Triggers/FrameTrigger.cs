@@ -32,5 +32,10 @@ namespace CViz.Timeline.Triggers
         {
             return $"FrameTrigger: {Layer} F{TargetFrame}";
         }
+
+        public virtual ITrigger Clone()
+        {
+            return new FrameTrigger(Layer, TargetFrame, Commands);
+        }
     }
 }

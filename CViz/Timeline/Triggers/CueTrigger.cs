@@ -24,5 +24,10 @@ namespace CViz.Timeline.Triggers
         {
             return $"CueTrigger: {Name}";
         }
+
+        public virtual ITrigger Clone()
+        {
+            return new CueTrigger(Name, Commands);
+        }
     }
 }

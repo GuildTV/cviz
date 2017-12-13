@@ -18,5 +18,10 @@ namespace CViz.Timeline.Triggers
         {
             return $"EndTrigger: {Layer}";
         }
+
+        public override ITrigger Clone()
+        {
+            return new EndTrigger(Layer, Commands);
+        }
     }
 }

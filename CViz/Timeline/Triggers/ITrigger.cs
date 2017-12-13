@@ -9,5 +9,7 @@ namespace CViz.Timeline.Triggers
         ImmutableList<CommandBase> Commands { get; }
 
         ITrigger WithCommand(CommandBase cmd);
+
+        ITrigger Clone();
     }
 }

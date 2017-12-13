@@ -22,5 +22,10 @@ namespace CViz.Timeline.Triggers
         {
             return "SetupTrigger";
         }
+
+        public ITrigger Clone()
+        {
+            return new SetupTrigger(Commands);
+        }
     }
 }

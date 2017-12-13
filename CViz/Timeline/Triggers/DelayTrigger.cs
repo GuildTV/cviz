@@ -37,5 +37,10 @@ namespace CViz.Timeline.Triggers
         {
             return $"DelayTrigger: {Duration}";
         }
+
+        public ITrigger Clone()
+        {
+            return new DelayTrigger(Duration, Commands);
+        }
     }
 }
