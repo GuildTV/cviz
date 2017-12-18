@@ -107,7 +107,7 @@ namespace CViz
             }
         }
 
-        public bool StartTimeline(string slot, ImmutableDictionary<string, string> parameters)
+        public bool StartTimeline(string slot, Dictionary<string, string> parameters)
         {
             lock (_timelines)
             {
@@ -115,7 +115,8 @@ namespace CViz
                 if (timeline == null || timeline.IsRunning)
                     return false;
 
-                timeline.SetParameterValues(parameters);
+                if (parameters != null)
+                    timeline.SetParameterValues(parameters.ToImmutableDictionary());
 
                 Log.InfoFormat("Starting timeline {0}", slot);
 

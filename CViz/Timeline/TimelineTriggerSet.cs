@@ -11,16 +11,16 @@ namespace CViz.Timeline
 
         public ImmutableDictionary<string, string> ParameterValues { get; private set; }
 
-        public TimelineTriggerSet(List<ITrigger> remaining, List<ITrigger> active, ImmutableDictionary<string, string> parameterValues)
+        public TimelineTriggerSet(List<ITrigger> remaining, List<ITrigger> active, ImmutableDictionary<string, string> parameterValues = null)
         {
             Remaining = remaining;
             Active = active;
-            ParameterValues = parameterValues;
+            ParameterValues = parameterValues ?? ImmutableDictionary<string, string>.Empty;
         }
 
         public void SetParameters(ImmutableDictionary<string, string> parameters)
         {
-            if (ParameterValues != null)
+            if (ParameterValues != ImmutableDictionary<string, string>.Empty)
                 return;
 
             ParameterValues = parameters;

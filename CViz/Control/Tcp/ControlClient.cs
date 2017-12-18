@@ -121,7 +121,7 @@ namespace CViz.Control.Tcp
 
                 case ClientAction.ActionType.Load:
                     if (_manager.LoadTimeline(action.TimelineSlot, action.TimelineFile, action.InstanceName ?? ""))
-                        _manager.StartTimeline(action.TimelineSlot, action.Parameters.ToImmutableDictionary());
+                        _manager.StartTimeline(action.TimelineSlot, action.Parameters);
                     break;
 
                 case ClientAction.ActionType.Cue:
