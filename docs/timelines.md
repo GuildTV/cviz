@@ -68,6 +68,16 @@ Note: It currently requires a modified CasparCG build, with the following patch 
 }
 ```
 
+### Scene Stop
+This triggers runs when a scene on the specified layer emits a stop (pause) event.
+
+```
+# @SCENESTOP layer
+@SCENESTOP 100 {
+  ...
+}
+```
+
 ### Cue
 These are run when the cued by a control interface. Only the first cue at the top of the trigger stack is run when cued. The description is sent back to the client to aid the control software in knowing the position through the timeline.
 

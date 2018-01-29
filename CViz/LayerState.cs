@@ -1,19 +1,27 @@
 ﻿namespace CViz
 {
+    enum LayerType
+    {
+        Video,
+        Scene,
+    }
+
     class LayerState
     {
-        public string VideoName { get; }
+        public string Name { get; }
         public long LastFrame { get; set; }
+        public LayerType Type { get; }
 
-        public LayerState(string videoName)
+        public LayerState(LayerType type, string name)
         {
-            VideoName = videoName;
+            Type = type;
+            Name = name;
             LastFrame = 0;
         }
 
         public override string ToString()
         {
-            return $"LayerState: {VideoName} {LastFrame}";
+            return $"LayerState: {Type} {Name} {LastFrame}";
         }
     }
 }

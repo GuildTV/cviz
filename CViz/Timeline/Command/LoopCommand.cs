@@ -19,11 +19,11 @@ namespace CViz.Timeline.Command
             {
                 new StilSoft.CasparCG.AmcpClient.Commands.Basic.PlayCommand(timeline.ChannelNumber, LayerId).Execute(timeline.Client);
                 LayerState state = timeline.GetLayerState(LayerId);
-                if (state == null)
+                if (state == null || state.Type != LayerType.Video)
                     throw new Exception("Missing layer state for loop " + LayerId);
                 state.LastFrame = 0;
 
-                new LoadBgCommand(timeline.ChannelNumber, LayerId, state.VideoName).Execute(timeline.Client);
+                new LoadBgCommand(timeline.ChannelNumber, LayerId, state.Name).Execute(timeline.Client);
                 timeline.AddTrigger(new LoopTrigger(LayerId));
                 
                 Log.InfoFormat("Looping: {0}", state);

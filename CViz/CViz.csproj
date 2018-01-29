@@ -99,8 +99,10 @@
     <Compile Include="Timeline\Triggers\ITrigger.cs" />
     <Compile Include="Timeline\Triggers\LoopTrigger.cs" />
     <Compile Include="Timeline\Triggers\RunChildOrCueTrigger.cs" />
+    <Compile Include="Timeline\Triggers\SceneStopTrigger.cs" />
     <Compile Include="Timeline\Triggers\SetupTrigger.cs" />
     <Compile Include="Util\ListExtensions.cs" />
+    <Compile Include="Util\StringExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

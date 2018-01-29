@@ -17,7 +17,7 @@ namespace CViz.Timeline.Command
                 return false;
 
             string resolvedFilename = timeline.GetParameterValue(_filename, false) ?? _filename;
-            timeline.SetLayerState(LayerId, new LayerState(resolvedFilename));
+            timeline.SetLayerState(LayerId, new LayerState(LayerType.Video, resolvedFilename));
             return true;
         }
 

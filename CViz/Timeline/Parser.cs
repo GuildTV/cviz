@@ -19,6 +19,7 @@ namespace CViz.Timeline
         private const string EndTriggerPattern = "^@END ([0-9]+) \\{$";
         private const string FrameTriggerPattern = "^@([0-9]+) ([0-9]+) \\{$";
         private const string DelayTriggerPattern = "^@DELAY ([0-9]+) \\{$";
+        private const string SceneStopTriggerPattern = "^@SCENESTOP ([0-9]+) (.+) \\{$";
 
         private const string LoadCommandPattern = "^(LOAD|LOADBG) ([\"].+?[\"]|[^ ]+)";
         private const string StopCommandPattern = "^STOP";
@@ -71,7 +72,7 @@ namespace CViz.Timeline
                 if (_currentTrigger == null)
                     throw new Exception("Failed to parse trigger: " + line);
             }
-            else if (line.StartsWith("}"))
+            else if (line.StartsWith("}") && _currentTrigger != null)
             {
                 _triggers.Add(_currentTrigger);
                 _currentTrigger = null;
@@ -114,7 +115,11 @@ namespace CViz.Timeline
             matcher = Regex.Match(line, DelayTriggerPattern);
             if (matcher.Success)
                 return new DelayTrigger(int.Parse(matcher.Groups[1].Value));
-            
+
+            matcher = Regex.Match(line, SceneStopTriggerPattern);
+            if (matcher.Success)
+                return new SceneStopTrigger(int.Parse(matcher.Groups[1].Value), matcher.Groups[2].Value);
+
             return null;
         }
 

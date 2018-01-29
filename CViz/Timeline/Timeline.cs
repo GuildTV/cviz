@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using CViz.Timeline.Command;
 using CViz.Timeline.Triggers;
@@ -318,12 +319,13 @@ namespace CViz.Timeline
             }
         }
 
-        internal void TriggerOnVideoFrame(int layer, long frame, long totalFrames)
+        internal void TriggerOnLayerFrame(int layer, LayerType type, long frame, long totalFrames)
         {
             lock (_triggersLock)
             {
                 if (!IsRunning) return;
 
+                // TODO - this could be rewritten to always keep currentLayerState up to date, as some triggers may need the info. but changing the timeline can fix that
                 foreach (FrameTrigger t in _triggers.Active.OfType<FrameTrigger>().ToList())
                 {
                     if (t.Layer != layer)
@@ -334,16 +336,27 @@ namespace CViz.Timeline
                     if (t.TargetFrame != -1)
                         targetFrame = t.TargetFrame;
 
-                    if (!_currentLayerState.TryGetValue(layer, out LayerState state))
+                    if (!_currentLayerState.TryGetValue(layer, out LayerState state) && type == LayerType.Scene)
+                    {
+                        state = new LayerState(type, "");
+                        _currentLayerState[layer] = state;
+                    }
+
+                    if (state == null)
                     {
                         Log.InfoFormat("Failed to get layer state: {0}-{1}", _timelineId, layer);
+                    }
+                    else if (state.Type != type)
+                    {
+                        Log.WarnFormat("Mismatched layer typee: {0}-{1}", _timelineId, layer);
                     }
                     // TODO - this check needs to ensure that an appropriate amount of time has passed
                     // NOTE: this also gets hit if the source video is a different framerate to the channel
                     else if (state.LastFrame == frame && targetFrame > frame)
                     {
                         // the video didn't play to the end for some reason, move on
-                        Log.InfoFormat("Loop didn't reach the end, check your video! {0}-{1}", _timelineId, layer);
+                        if (state.Type != LayerType.Scene || targetFrame - 1 != frame)
+                            Log.InfoFormat("Loop didn't reach the end, check your video! {0}-{1}", _timelineId, layer);
 
                         ExecuteTrigger(t);
                     }
@@ -361,6 +374,25 @@ namespace CViz.Timeline
 
                 if (_currentLayerState.TryGetValue(layer, out LayerState st))
                     st.LastFrame = frame;
+            }
+        }
+        
+        internal void TriggerOnScenePaused(int layer, string stopName)
+        {
+            lock (_triggersLock)
+            {
+                if (!IsRunning) return;
+
+                foreach (SceneStopTrigger t in _triggers.Active.OfType<SceneStopTrigger>().ToList())
+                {
+                    if (t.Layer != layer)
+                        continue;
+
+                    if (t.StopName != stopName)
+                        continue;
+
+                    ExecuteTrigger(t);
+                }
             }
         }
 
@@ -424,11 +456,7 @@ namespace CViz.Timeline
                     return name;
 
                 if (escape)
-                {
-                    param = param.Replace("\\n", "\\\\n"); // " => \"
-                    param = param.Replace("\\\"", "\\\\\\\\\""); // \" => \\\\"
-                    param = param.Replace("\"", "\\\""); // " => \"
-                }
+                    param = param.AddSlashes();
 
                 return param;
             }

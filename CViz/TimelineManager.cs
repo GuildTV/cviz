@@ -143,13 +143,24 @@ namespace CViz
             }
         }
 
-        internal void TriggerOnVideoFrame(int channel, int layer, long frame, long totalFrames)
+        internal void TriggerOnLayerFrame(int channel, int layer, LayerType type, long frame, long totalFrames)
         {
             lock (_timelines)
             {
                 foreach (Timeline.Timeline timeline in _timelines.Values.Where(t => t.ChannelNumber == channel))
                 {
-                    timeline.TriggerOnVideoFrame(layer, frame, totalFrames);
+                    timeline.TriggerOnLayerFrame(layer, type, frame, totalFrames);
+                }
+            }
+        }
+
+        internal void TriggerOnScenePaused(int channel, int layer, string stopName)
+        {
+            lock (_timelines)
+            {
+                foreach (Timeline.Timeline timeline in _timelines.Values.Where(t => t.ChannelNumber == channel))
+                {
+                    timeline.TriggerOnScenePaused(layer, stopName);
                 }
             }
         }
