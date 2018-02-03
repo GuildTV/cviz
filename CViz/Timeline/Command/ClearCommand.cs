@@ -17,10 +17,10 @@ namespace CViz.Timeline.Command
         {
             try
             {
-                new StilSoft.CasparCG.AmcpClient.Commands.Basic.ClearCommand(timeline.ChannelNumber, LayerId).ExecuteAsync(timeline.Client);
+                new StilSoft.CasparCG.AmcpClient.Commands.Basic.ClearCommand(timeline.ChannelNumber, LayerId).ExecuteAsync(timeline.CasparClient);
                 // make sure to reset opacity and transforms, or we could fuck up the next timeline
-                new MixerOpacitySetCommand(timeline.ChannelNumber, LayerId, 1).ExecuteAsync(timeline.Client);
-                new MixerFillSetCommand(timeline.ChannelNumber, LayerId, new MixerFill(0, 0, 1, 1)).ExecuteAsync(timeline.Client);
+                new MixerOpacitySetCommand(timeline.ChannelNumber, LayerId, 1).ExecuteAsync(timeline.CasparClient);
+                new MixerFillSetCommand(timeline.ChannelNumber, LayerId, new MixerFill(0, 0, 1, 1)).ExecuteAsync(timeline.CasparClient);
                 return true;
             }
             catch (Exception e)

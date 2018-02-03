@@ -1,3 +1,6 @@
 [submodule "lib/bespoke.osc"]
 	path = lib/bespoke.osc
 	url = https://bitbucket.org/pvarcholik/bespoke.osc.git
+[submodule "lib/LibAtem"]
+	path = lib/LibAtem
+	url = ssh://git@git.julusian.co.uk:2217/atem/LibAtem.git

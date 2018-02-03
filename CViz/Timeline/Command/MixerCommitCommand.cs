@@ -17,7 +17,7 @@ namespace CViz.Timeline.Command
         {
             try
             {
-                new StilSoft.CasparCG.AmcpClient.Commands.Mixer.MixerCommitCommand(timeline.ChannelNumber).Execute(timeline.Client);
+                new StilSoft.CasparCG.AmcpClient.Commands.Mixer.MixerCommitCommand(timeline.ChannelNumber).Execute(timeline.CasparClient);
                 return true;
             }
             catch (Exception e)

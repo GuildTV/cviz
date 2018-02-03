@@ -9,6 +9,7 @@ using CViz.Timeline.Command;
 using CViz.Timeline.Triggers;
 using CViz.Util;
 using log4net;
+using LibAtem.Net;
 using StilSoft.CasparCG.AmcpClient;
 
 namespace CViz.Timeline
@@ -29,10 +30,11 @@ namespace CViz.Timeline
         private int _portId;
         private long _portFirstFrame;
 
-        public Timeline(string timelineId, AmcpConnection client, int channelId, TimelineState state, TimelineSpec spec)
+        public Timeline(string timelineId, AmcpConnection casparClient, AtemClient atemClient, int channelId, TimelineState state, TimelineSpec spec)
         {
             _timelineId = timelineId;
-            Client = client;
+            CasparClient = casparClient;
+            AtemClient = atemClient;
             ChannelNumber = channelId;
             State = state;
             _spec = spec;
@@ -48,7 +50,10 @@ namespace CViz.Timeline
         
         public int ChannelNumber { get; }
         public TimelineState State { get; }
-        public AmcpConnection Client { get; }
+
+        public AmcpConnection CasparClient { get; }
+        public AtemClient AtemClient { get; }
+
         public bool IsRunning { get; private set; }
         private bool KillNow { get; set; }
 

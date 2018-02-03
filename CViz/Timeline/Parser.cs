@@ -128,6 +128,8 @@ namespace CViz.Timeline
             string[] parts = line.Split(new []{' '}, 2);
             if (parts[0] == "HTTP")
                 return ParseHttpCommand(parts[1]);
+            if (parts[0] == "ATEM")
+                return ParseAtemCommand(parts[1]);
 
             int layerId = int.Parse(parts[0]);
             string command = parts[1];
@@ -159,6 +161,18 @@ namespace CViz.Timeline
         {
             string[] parts = line.Split(' ');
             return new HttpCommand(parts[0], parts[1]);
+        }
+
+        private static AtemCommandBase ParseAtemCommand(string line)
+        {
+            string[] parts = line.Split(' ');
+            if (parts[0] == "MACRO" && parts[1] == "RUN")
+            {
+                uint macroId = uint.Parse(parts[2]);
+                return new AtemMacroRunCommand(macroId);
+            }
+
+            throw new Exception("Unknown Atem command");
         }
 
         public static TimelineSpec ParseFile(string basePath, string name)

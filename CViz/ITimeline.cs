@@ -1,12 +1,15 @@
 ﻿using System;
 using CViz.Timeline.Triggers;
+using LibAtem.Net;
 using StilSoft.CasparCG.AmcpClient;
 
 namespace CViz
 {
     interface ITimeline
     {
-        AmcpConnection Client { get; }
+        AmcpConnection CasparClient { get; }
+        AtemClient AtemClient { get; }
+
         int ChannelNumber { get; }
 
         void SetLayerState(int layerId, LayerState state);

@@ -5,7 +5,9 @@
   "casparHost": "127.0.0.1",
   "casparPort": 5250,
 
-  "templateDir": "./timelines/",
+  "atemHost":  "10.42.13.99", 
+
+  "templateDir": "c:/graphics/elections-graphics/cviz/",
 
   "slots":[
     {

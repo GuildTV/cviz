@@ -8,6 +8,7 @@ using CViz.Control;
 using CViz.Timeline;
 using CViz.Timeline.Triggers;
 using log4net;
+using LibAtem.Net;
 using StilSoft.CasparCG.AmcpClient;
 
 namespace CViz
@@ -18,7 +19,9 @@ namespace CViz
 
         public static string TimelineExt = ".tl";
 
-        private readonly AmcpConnection _client;
+        private readonly AmcpConnection _casparClient;
+        private readonly AtemClient _atemClient;
+
         private readonly Config.Config _config;
         private readonly Dictionary<string, Timeline.Timeline> _timelines;
 
@@ -33,7 +36,7 @@ namespace CViz
             new Thread(oscWrapper.Run).Start();
 
             Log.InfoFormat("Connecting to CasparCG at {0}:{1}", config.CasparHost, config.CasparPort);
-            _client = new AmcpConnection(config.CasparHost, config.CasparPort)
+            _casparClient = new AmcpConnection(config.CasparHost, config.CasparPort)
             {
                 AutoConnect = true,
                 AutoReconnect = true,
@@ -43,10 +46,17 @@ namespace CViz
             foreach (SlotConfig slot in config.Slots)
             {
                 var state = new TimelineState(null, slot.Id, "", "");
-                var tl = new Timeline.Timeline(slot.Id, _client, slot.Channel, state,
+                var tl = new Timeline.Timeline(slot.Id, _casparClient, _atemClient, slot.Channel, state,
                     new TimelineSpec("", new List<ITrigger>(), new Dictionary<string, IEnumerable<ITrigger>>()));
                 state.SetState(TimelineState.StateType.Clear);
                 _timelines.Add(slot.Id, tl);
+            }
+
+            if (!string.IsNullOrEmpty(config.AtemHost))
+            {
+                _atemClient = new AtemClient(config.AtemHost);
+                _atemClient.OnConnection += sender => Log.ErrorFormat("Connected to ATEM");
+                _atemClient.OnDisconnect += sender => Log.ErrorFormat("Lost connection to ATEM");
             }
         }
 
@@ -97,9 +107,9 @@ namespace CViz
                     Log.ErrorFormat("Faield to load timeline file: {0}", filename);
                     return false;
                 }
-
+                
                 TimelineState state = new TimelineState(_controlInterface, slot, filename, instanceId);
-                _timelines[slot] = new Timeline.Timeline(slot, _client, timeline.ChannelNumber, state, spec);
+                _timelines[slot] = new Timeline.Timeline(slot, _casparClient, _atemClient, timeline.ChannelNumber, state, spec);
 
                 Log.InfoFormat("Timeline {0} ({1}) ready", slot, filename);
 
