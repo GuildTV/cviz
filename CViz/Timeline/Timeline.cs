@@ -332,7 +332,7 @@ namespace CViz.Timeline
                         continue;
 
                     // determine the frame we are aiming for
-                    long targetFrame = totalFrames;
+                    long targetFrame = totalFrames - 1;
                     if (t.TargetFrame != -1)
                         targetFrame = t.TargetFrame;
 
@@ -352,11 +352,10 @@ namespace CViz.Timeline
                     }
                     // TODO - this check needs to ensure that an appropriate amount of time has passed
                     // NOTE: this also gets hit if the source video is a different framerate to the channel
-                    else if (state.LastFrame == frame && targetFrame > frame)
+                    else if (state.Type != LayerType.Scene && state.LastFrame == frame && targetFrame > frame)
                     {
                         // the video didn't play to the end for some reason, move on
-                        if (state.Type != LayerType.Scene || targetFrame - 1 != frame)
-                            Log.InfoFormat("Loop didn't reach the end, check your video! {0}-{1}", _timelineId, layer);
+                        Log.InfoFormat("Loop didn't reach the end, check your video! {0}-{1}. Hit frame {2}/{3}", _timelineId, layer, frame, totalFrames);
 
                         ExecuteTrigger(t);
                     }
@@ -364,6 +363,7 @@ namespace CViz.Timeline
                     {
                         // do it
                         ExecuteTrigger(t);
+                        Log.InfoFormat("Trigger layer: {0} on {1}/{2}", layer, frame, totalFrames);
 
                     }
                     else if (frame >= targetFrame)
