@@ -81,6 +81,8 @@
     <Compile Include="Timeline\Command\MixerCommitCommand.cs" />
     <Compile Include="Timeline\Command\PlayCommand.cs" />
     <Compile Include="Timeline\TimelineSpec.cs" />
+    <Compile Include="Timeline\Command\AtemCommand.cs" />
+    <Compile Include="Timeline\Command\AtemMacroRunCommand.cs" />
     <Compile Include="Timeline\TimelineState.cs" />
     <Compile Include="TimelineManager.cs" />
     <Compile Include="Timeline\Command\AmcpCommand.cs" />
@@ -122,6 +124,10 @@
     <ProjectReference Include="..\lib\bespoke.osc\Bespoke.Common\Bespoke.Common.csproj">
       <Project>{f8a1578f-bebe-4bbe-ab11-a0496bdb746a}</Project>
       <Name>Bespoke.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\lib\LibAtem\LibAtem\LibAtem.csproj">
+      <Project>{e600dc77-fb09-4735-aa0e-a76006ac7cf6}</Project>
+      <Name>LibAtem</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

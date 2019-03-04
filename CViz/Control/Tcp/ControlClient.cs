@@ -70,7 +70,7 @@ namespace CViz.Control.Tcp
                 if (arr[i] == '\n')
                 {
                     int len = i + 1 - start;
-                    _sb.Append(Encoding.ASCII.GetString(arr, start, len));
+                    _sb.Append(Encoding.UTF8.GetString(arr, start, len));
                     string res = _sb.ToString();
                     _sb.Clear();
 
@@ -82,7 +82,7 @@ namespace CViz.Control.Tcp
 
             // Queue remainder and stop for next time
             if (length - start > 0)
-                _sb.Append(Encoding.ASCII.GetString(arr, start, length - start));
+                _sb.Append(Encoding.UTF8.GetString(arr, start, length - start));
         }
 
         private void ParseAndRun(string str)
@@ -178,7 +178,7 @@ namespace CViz.Control.Tcp
             {
                 try
                 {
-                    _socket.Send(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(obj)));
+                    _socket.Send(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(obj)));
                 }
                 catch (Exception)
                 {

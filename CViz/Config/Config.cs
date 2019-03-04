@@ -6,8 +6,12 @@ namespace CViz.Config
     {
         public int Port { get; set; }
         public int OscPort { get; set; }
+
         public string CasparHost { get; set; }
         public int CasparPort { get; set; }
+
+        public string AtemHost { get; set; }
+
         public string TemplateDir { get; set; }
 
         public SlotConfig[] Slots { get; set; }

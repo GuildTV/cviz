@@ -36,7 +36,7 @@ namespace CViz.Timeline.Command
 
             try
             {
-                new CustomCommand($"{command} {timeline.ChannelNumber}-{LayerId} {translatedParameters}").Execute(timeline.Client);
+                new CustomCommand($"{command} {timeline.ChannelNumber}-{LayerId} {translatedParameters}").Execute(timeline.CasparClient);
                 return true;
             }
             catch (Exception e)

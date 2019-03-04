@@ -17,13 +17,13 @@ namespace CViz.Timeline.Command
         {
             try
             {
-                new StilSoft.CasparCG.AmcpClient.Commands.Basic.PlayCommand(timeline.ChannelNumber, LayerId).Execute(timeline.Client);
+                new StilSoft.CasparCG.AmcpClient.Commands.Basic.PlayCommand(timeline.ChannelNumber, LayerId).Execute(timeline.CasparClient);
                 LayerState state = timeline.GetLayerState(LayerId);
                 if (state == null || state.Type != LayerType.Video)
                     throw new Exception("Missing layer state for loop " + LayerId);
                 state.LastFrame = 0;
-
-                new LoadBgCommand(timeline.ChannelNumber, LayerId, state.Name).Execute(timeline.Client);
+                
+                new LoadBgCommand(timeline.ChannelNumber, LayerId, state.Name).Execute(timeline.CasparClient);
                 timeline.AddTrigger(new LoopTrigger(LayerId));
                 
                 Log.InfoFormat("Looping: {0}", state);
