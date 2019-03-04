@@ -9,9 +9,13 @@
 
   "templateDir": "c:/graphics/elections-graphics/cviz/",
 
-  "slots":[
+  "slots": [
     {
       "id": "default",
+      "channel": 1
+    },
+    {
+      "id": "lowerthird",
       "channel": 1
     }
   ]

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using CViz.Util;
 using log4net;
 using StilSoft.CasparCG.AmcpClient.Commands;
 
@@ -30,6 +31,8 @@ namespace CViz.Timeline.Command
             foreach (string param in parameters.Split(' ').Where(p => p.Length > 0))
             {
                 string param2 = timeline.GetParameterValue(param, true);
+                param2 = param2.AddSlashes2();
+
 
                 translatedParameters.Append("\"").Append(param2).Append("\" ");
             }

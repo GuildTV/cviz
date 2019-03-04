@@ -20,5 +20,20 @@ namespace CViz.Util
             }
             return ret.ToString();
         }
+        public static string AddSlashes2(this string str)
+        {
+            var ret = new StringBuilder();
+            for (int i = 0; i < str.Length; i++)
+            {
+                char c = str[i];
+                if (str.Length > i+1 && str[i+1] == '\'' && c == '\\')
+                {
+                    continue;
+                }
+
+                ret.Append(c.ToString());
+            }
+            return ret.ToString();
+        }
     }
 }
