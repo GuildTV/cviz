@@ -22,7 +22,9 @@ namespace CViz.Timeline.Command
                 if (state == null || state.Type != LayerType.Video)
                     throw new Exception("Missing layer state for loop " + LayerId);
                 state.LastFrame = 0;
-                
+                state.LastFrameCount = 0;
+
+
                 new LoadBgCommand(timeline.ChannelNumber, LayerId, state.Name).Execute(timeline.CasparClient);
                 timeline.AddTrigger(new LoopTrigger(LayerId));
                 

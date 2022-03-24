@@ -13,7 +13,10 @@
 
             LayerState state = timeline.GetLayerState(LayerId);
             if (state != null)
+            {
                 state.LastFrame = 0;
+                state.LastFrameCount = 0;
+            }
 
             return true;
         }

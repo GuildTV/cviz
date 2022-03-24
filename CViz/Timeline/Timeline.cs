@@ -357,7 +357,7 @@ namespace CViz.Timeline
                     }
                     // TODO - this check needs to ensure that an appropriate amount of time has passed
                     // NOTE: this also gets hit if the source video is a different framerate to the channel
-                    else if (state.Type != LayerType.Scene && state.LastFrame == frame && targetFrame > frame)
+                    else if (state.Type != LayerType.Scene && state.LastFrameCount > 5 && state.LastFrame == frame && targetFrame > frame)
                     {
                         // the video didn't play to the end for some reason, move on
                         Log.InfoFormat("Loop didn't reach the end, check your video! {0}-{1}. Hit frame {2}/{3}", _timelineId, layer, frame, totalFrames);
@@ -378,7 +378,18 @@ namespace CViz.Timeline
                 }
 
                 if (_currentLayerState.TryGetValue(layer, out LayerState st))
-                    st.LastFrame = frame;
+                {
+                    if (st.LastFrame == frame)
+                    {
+                        st.LastFrameCount++;
+                    }
+                    else
+                    {
+                        st.LastFrame = frame;
+                        st.LastFrameCount = 0;
+                    }
+
+                }
             }
         }
         
